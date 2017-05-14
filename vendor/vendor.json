@@ -346,6 +346,12 @@
 			"revisionTime": "2017-05-04T18:21:34Z"
 		},
 		{
+			"checksumSHA1": "zmCk+lgIeiOf0Ng9aFP9aFy8ksE=",
+			"path": "github.com/gorilla/mux",
+			"revision": "4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc",
+			"revisionTime": "2017-04-27T04:12:50Z"
+		},
+		{
 			"checksumSHA1": "Uzyon2091lmwacNsl1hCytjhHtg=",
 			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/github.com/hashicorp/go-cleanhttp",
 			"path": "github.com/hashicorp/go-cleanhttp",
@@ -825,10 +831,9 @@
 		},
 		{
 			"checksumSHA1": "BoXdUBWB8UnSlFlbnuTQaPqfCGk=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/github.com/op/go-logging",
 			"path": "github.com/op/go-logging",
-			"revision": "9bc35cec3d9d56e050abd38d7ac2eaf3223a9432",
-			"revisionTime": "2017-05-04T18:21:34Z"
+			"revision": "970db520ece77730c7e4724c61121037378659d9",
+			"revisionTime": "2016-03-15T20:05:05Z"
 		},
 		{
 			"checksumSHA1": "3AoPMXlmVq2+iWMpsdJZkcUKHB8=",
@@ -1118,5 +1123,5 @@
 			"revisionTime": "2017-05-04T18:21:34Z"
 		}
 	],
-	"rootPath": "github.com/pascallimeux/ocmsV2"
+	"rootPath": "github.com/pascallimeux/his"
 }
