@@ -1,4 +1,4 @@
-package api
+package ocms
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"time"
 	"fmt"
 	"errors"
-	"github.com/pascallimeux/ocmsV2/helpers"
+	utils "github.com/pascallimeux/his/modules/utils"
 )
 
 
@@ -18,19 +18,19 @@ type IsConsent struct {
 	Consent string
 }
 
-//HTTP Get - /ocms/v2/api/version
-func (a *AppContext) getVersion(w http.ResponseWriter, r *http.Request) {
+//HTTP Get - /his/v0/api/version
+func (a *OCMSContext) getVersion(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getVersion() : calling method -")
-	consentHelper := &helpers.ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
-	err := InitHelper(r, consentHelper)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err := utils.InitHelper(r, consentHelper)
 	if err != nil {
-		SendError(w, err)
+		utils.SendError(w, err)
 		return
 	}
 	version := Version{}
 	version.Version, err = consentHelper.GetVersion(a.ChainCodeID)
 	if err != nil {
-		SendError(w, err)
+		utils.SendError(w, err)
 	}
 	content, _ := json.Marshal(version)
 	w.Header().Set("Content-Type", "application/json")
@@ -38,21 +38,21 @@ func (a *AppContext) getVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write(content)
 }
 
-//HTTP Post - /ocms/v2/api/consent
-func (a *AppContext) processConsent(w http.ResponseWriter, r *http.Request) {
+//HTTP Post - /his/v0/api/consent
+func (a *OCMSContext) processConsent(w http.ResponseWriter, r *http.Request) {
 	log.Debug("processConsent() : calling method -")
 
 	var bytes []byte
-	var consent helpers.Consent
+	var consent Consent
 	err := json.NewDecoder(r.Body).Decode(&consent)
 	if err != nil {
-		SendError(w, err)
+		utils.SendError(w, err)
 		return
 	}
-	consentHelper := &helpers.ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
-	err = InitHelper(r, consentHelper)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err = utils.InitHelper(r, consentHelper)
 	if err != nil {
-		SendError(w, err)
+		utils.SendError(w, err)
 		return
 	}
 	switch action := consent.Action; action {
@@ -72,11 +72,11 @@ func (a *AppContext) processConsent(w http.ResponseWriter, r *http.Request) {
 		bytes, err = a.isConsent(consentHelper, a.ChainCodeID, consent)
 	default:
 		log.Error("bad action request")
-		SendError(w, err)
+		utils.SendError(w, err)
 		return
 	}
 	if err != nil {
-		SendError(w, err)
+		utils.SendError(w, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -85,7 +85,7 @@ func (a *AppContext) processConsent(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (a *AppContext) createConsent(consentHelper *helpers.ConsentHelper, chainCodeID string, consent helpers.Consent) ([]byte, error) {
+func (a *OCMSContext) createConsent(consentHelper *ConsentHelper, chainCodeID string, consent Consent) ([]byte, error) {
 	err := check_args(&consent)
 	var message string
 	if err != nil {
@@ -105,7 +105,7 @@ func (a *AppContext) createConsent(consentHelper *helpers.ConsentHelper, chainCo
 	return consent2Bytes(consent)
 }
 
-func (a *AppContext) listConsents(consentHelper *helpers.ConsentHelper, chainCodeID, applicationID string) ([]byte, error) {
+func (a *OCMSContext) listConsents(consentHelper *ConsentHelper, chainCodeID, applicationID string) ([]byte, error) {
 	message := fmt.Sprintf("listConsents(applicationID=%s) : calling method -", applicationID)
 	log.Info(message)
 	consents, err := consentHelper.GetConsents(chainCodeID, applicationID)
@@ -115,7 +115,7 @@ func (a *AppContext) listConsents(consentHelper *helpers.ConsentHelper, chainCod
 	return consents2Bytes(consents)
 }
 
-func (a *AppContext) getConsent(consentHelper *helpers.ConsentHelper, chainCodeID, applicationID, consentID string) ([]byte, error) {
+func (a *OCMSContext) getConsent(consentHelper *ConsentHelper, chainCodeID, applicationID, consentID string) ([]byte, error) {
 	message := fmt.Sprintf("getConsent(applicationID=%s, consentID=%s) : calling method -", applicationID, consentID)
 	log.Info(message)
 	consent, err := consentHelper.GetConsent(chainCodeID, applicationID, consentID)
@@ -125,7 +125,7 @@ func (a *AppContext) getConsent(consentHelper *helpers.ConsentHelper, chainCodeI
 	return consent2Bytes(consent)
 }
 
-func (a *AppContext) unactivateConsent(consentHelper *helpers.ConsentHelper, chainCodeID, applicationID, consentID string) ([]byte, error) {
+func (a *OCMSContext) unactivateConsent(consentHelper *ConsentHelper, chainCodeID, applicationID, consentID string) ([]byte, error) {
 	message := fmt.Sprintf("unactivateConsent(applicationID=%s, consentID=%s) : calling method -", applicationID, consentID)
 	log.Info(message)
 	_, err := consentHelper.RemoveConsent(chainCodeID, applicationID, consentID)
@@ -139,7 +139,7 @@ func (a *AppContext) unactivateConsent(consentHelper *helpers.ConsentHelper, cha
 	return consent2Bytes(consent)
 }
 
-func (a *AppContext) getConsents4Consumer(consentHelper *helpers.ConsentHelper, chainCodeID, applicationID, consumerID string) ([]byte, error) {
+func (a *OCMSContext) getConsents4Consumer(consentHelper *ConsentHelper, chainCodeID, applicationID, consumerID string) ([]byte, error) {
 	message := fmt.Sprintf("getConsents4Consumer(applicationID=%s, consumerID=%s) : calling method -", applicationID, consumerID)
 	log.Info(message)
 	consents, err := consentHelper.GetConsumerConsents(chainCodeID, applicationID, consumerID)
@@ -149,7 +149,7 @@ func (a *AppContext) getConsents4Consumer(consentHelper *helpers.ConsentHelper, 
 	return consents2Bytes(consents)
 }
 
-func (a *AppContext) getConsents4Owner(consentHelper *helpers.ConsentHelper, chainCodeID, applicationID, ownerID string) ([]byte, error) {
+func (a *OCMSContext) getConsents4Owner(consentHelper *ConsentHelper, chainCodeID, applicationID, ownerID string) ([]byte, error) {
 	message := fmt.Sprintf("getConsents4Owner(applicationID=%s, ownerID=%s) : calling method -", applicationID, ownerID)
 	log.Info(message)
 	consents, err := consentHelper.GetOwnerConsents(chainCodeID, applicationID, ownerID)
@@ -159,7 +159,7 @@ func (a *AppContext) getConsents4Owner(consentHelper *helpers.ConsentHelper, cha
 	return consents2Bytes(consents)
 }
 
-func (a *AppContext) isConsent(consentHelper *helpers.ConsentHelper, chainCodeID string, consent helpers.Consent) ([]byte, error) {
+func (a *OCMSContext) isConsent(consentHelper *ConsentHelper, chainCodeID string, consent Consent) ([]byte, error) {
 	message := fmt.Sprintf("isConsent(consent=%s) : calling method -", consent.Print())
 	log.Info(message)
 	isconsent, err := consentHelper.IsConsentExist(chainCodeID, consent.AppID, consent.OwnerID, consent.ConsumerID, consent.DataType, consent.DataAccess)
@@ -176,7 +176,7 @@ func (a *AppContext) isConsent(consentHelper *helpers.ConsentHelper, chainCodeID
 	return content, nil
 }
 
-func consents2Bytes(consents []helpers.Consent) ([]byte, error) {
+func consents2Bytes(consents []Consent) ([]byte, error) {
 	log.Debug("consents2Bytes() : calling method -")
 	j, err := json.Marshal(consents)
 	if err != nil {
@@ -185,7 +185,7 @@ func consents2Bytes(consents []helpers.Consent) ([]byte, error) {
 	return j, nil
 }
 
-func consent2Bytes(consent helpers.Consent) ([]byte, error) {
+func consent2Bytes(consent Consent) ([]byte, error) {
 	log.Debug("consent2Bytes() : calling method -")
 	j, err := json.Marshal(consent)
 	if err != nil {
@@ -194,7 +194,7 @@ func consent2Bytes(consent helpers.Consent) ([]byte, error) {
 	return j, nil
 }
 
-func check_args(consent *helpers.Consent) error {
+func check_args(consent *Consent) error {
 	log.Debug("check_args() : calling method -")
 	if consent.AppID == "" {
 		return errors.New("appID is mandatory!")

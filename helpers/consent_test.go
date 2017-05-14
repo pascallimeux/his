@@ -7,7 +7,6 @@ import (
 	"strconv"
 )
 
-
 func TestGetVersion(t *testing.T) {
 	value, err := consHelper.GetVersion(configuration.ChainCodeID)
 	if err != nil {
@@ -164,7 +163,3 @@ func TestIsConsentExist(t *testing.T) {
 	}
 }
 
-func getStringDateNow(nbdaysafter time.Duration) string{
-	t := time.Now().Add(nbdaysafter * 24 * time.Hour)
-	return t.Format("2006-01-02")
-}

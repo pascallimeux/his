@@ -4,40 +4,39 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"github.com/op/go-logging"
+	"github.com/pascallimeux/his/modules/ocms"
 )
-var log = logging.MustGetLogger("ocms.api")
+
+var log = logging.MustGetLogger("his.api")
 
 const (
-	VERSIONURI       = "/ocms/v2/api/version"
-	CONSENTAPI       = "/ocms/v2/api/consent/"
 
-	BCINFO           = "/ocms/v2/dashboard/chain"
-	QUERYTRANSACTION = "/ocms/v2/dashboard/transaction"
-	BLOCKBYNB        = "/ocms/v2/dashboard/blocks/nb"
-	BLOCKBYHASH      = "/ocms/v2/dashboard/blocks/hash"
-	GETCHANNELS      = "/ocms/v2/dashboard/channels"
-	INSTALLEDCC      = "/ocms/v2/dashboard/cc/installed"
-	QUERYBYCC        = "/ocms/v2/dashboard/cc/query"
-	GETPEERS         = "/ocms/v2/dashboard/peers"
-	INSTANCIATEDCC   = "/ocms/v2/dashboard/cc/instanciated"
+	BCINFO           = "/his/v0/dashboard/chain"
+	QUERYTRANSACTION = "/his/v0/dashboard/transaction"
+	BLOCKBYNB        = "/his/v0/dashboard/blocks/nb"
+	BLOCKBYHASH      = "/his/v0/dashboard/blocks/hash"
+	GETCHANNELS      = "/his/v0/dashboard/channels"
+	INSTALLEDCC      = "/his/v0/dashboard/cc/installed"
+	QUERYBYCC        = "/his/v0/dashboard/cc/query"
+	GETPEERS         = "/his/v0/dashboard/peers"
+	INSTANCIATEDCC   = "/his/v0/dashboard/cc/instanciated"
 
-	REGISTER         = "/ocms/v2/admin/user/register"
-	ENROLL           = "/ocms/v2/admin/user/enroll"
-	REVOKE           = "/ocms/v2/admin/user/revoke"
+	REGISTER         = "/his/v0/admin/user/register"
+	ENROLL           = "/his/v0/admin/user/enroll"
+	REVOKE           = "/his/v0/admin/user/revoke"
 )
 
 type AppContext struct {
 	HttpServer     	*http.Server
+	OcmsContext     ocms.OCMSContext
 	ChainCodeID   	string
 	ChainID         string
 	Repo            string
 	StatStorePath   string
 }
 
-func (a *AppContext) CreateOCMSRoutes(router *mux.Router) {
-	log.Debug("CreateOCMSRoutes() : calling method -")
-	router.HandleFunc(VERSIONURI, a.getVersion).Methods("GET")
-	router.HandleFunc(CONSENTAPI, a.processConsent).Methods("POST")
+func (a *AppContext) CreateHISRoutes(router *mux.Router) {
+	log.Debug("CreateHISRoutes() : calling method -")
 	router.HandleFunc(BCINFO, a.blockchainInfo).Methods("GET")
 	router.HandleFunc(GETCHANNELS, a.getChannels).Methods("GET")
 	router.HandleFunc(GETPEERS, a.getPeers).Methods("GET")

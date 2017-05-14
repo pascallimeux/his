@@ -1,13 +1,14 @@
-package helpers
+package ocms
+
 import (
 	sdkUtil "github.com/hyperledger/fabric-sdk-go/fabric-client/helpers"
 	fabricClient "github.com/hyperledger/fabric-sdk-go/fabric-client"
+	"github.com/hyperledger/fabric-sdk-go/fabric-client/events"
+	"github.com/pascallimeux/his/modules/utils"
 	"fmt"
 	"time"
 	"strings"
 	"encoding/json"
-	"github.com/hyperledger/fabric-sdk-go/fabric-client/events"
-	//"errors"
 )
 
 type ConsentHelper struct {
@@ -32,12 +33,12 @@ type Consent struct {
 }
 
 
-func (ch *ConsentHelper) Init(userCredentials UserCredentials) error{
-	chain, err := getChain(userCredentials, ch.StatStorePath, ch.ChainID)
+func (ch *ConsentHelper) Init(userCredentials utils.UserCredentials) error{
+	chain, err := utils.GetChain(userCredentials, ch.StatStorePath, ch.ChainID)
 	if err != nil {
 		return err
 	}
-	eventHub, err := getEventHub()
+	eventHub, err := utils.GetEventHub()
 	if err != nil {
 		return err
 	}

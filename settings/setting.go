@@ -35,7 +35,7 @@ type Settings struct {
 
 
 }
-var log = logging.MustGetLogger("ocms.settings")
+var log = logging.MustGetLogger("his.settings")
 
 func (s *Settings) ToString() string {
 	st :=     "Logger          --> file:" + s.LogFileName + " in " + s.LogMode + " mode \n"
@@ -59,7 +59,7 @@ func (s *Settings) InitLogger() (err error){
 func findConfigFile(configPath, configFileName string) error {
 	path := configPath + "/" + configFileName + ".toml"
 	if _, err := os.Stat(path); err != nil {
-		configPath = os.Getenv("OCMSPATH")
+		configPath = os.Getenv("HISPATH")
 		if configPath == "" {
 			return errors.New("no config file found!")
 		} else {
@@ -88,10 +88,10 @@ func GetSettings(configPath, configFileName string) (Settings, error) {
 		fmt.Println(err.Error())
 		return configuration, errors.New("Config file not found...")
 	} else {
-		configuration.Version = viper.GetString("OCMSversion.version")
+		configuration.Version = viper.GetString("HISversion.version")
 
 		logMode := viper.GetString("logger.mode")
-		logFileName := os.Getenv("OCMSLOGFILE")
+		logFileName := os.Getenv("HISLOGFILE")
 		if logFileName == "" {
 			logFileName = viper.GetString("logger.logFileName")
 		}
@@ -160,49 +160,6 @@ func getOutboundIP() (string, error) {
 	return localAddr[0:idx], nil
 }
 
-func InitLogger2(logMode, logFilePath string) (*os.File, error) {
-	format := logging.MustStringFormatter(
-		//`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-		` %{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x} %{message}`,
-	)
-	f := os.Stderr
-	if logFilePath != "" {
-		if _, err := os.Stat(logFilePath); os.IsNotExist(err) {
-			f, err = os.Create(logFilePath)
-			if err != nil {
-				return f, err
-			}
-		}else {
-			f, err = os.OpenFile(logFilePath, os.O_APPEND | os.O_WRONLY, 0600)
-			if err != nil {
-				return f, err
-			}
-		}
-	}
-
-	backend := logging.NewLogBackend(f, "ocms", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, format)
-	backendLeveled := logging.AddModuleLevel(backendFormatter)
-	level := logging.ERROR
-	switch logMode {
-	case "critical":
-		level = logging.CRITICAL
-	case "error":
-		level = logging.ERROR
-	case "warning":
-		level = logging.WARNING
-	case "info":
-		level = logging.INFO
-	case "debug":
-		level = logging.DEBUG
-	}
-	backendLeveled.SetLevel(level, "")
-	logging.SetBackend(backendLeveled)
-	log.Debug("Logger initialized")
-	return f, nil
-}
-
-
 func  InitLogger(logMode, logFilePath string) (*os.File, error) {
 	f := os.Stderr
 	if logFilePath != "" {
@@ -219,12 +176,24 @@ func  InitLogger(logMode, logFilePath string) (*os.File, error) {
 		}
 	}
 	var format = logging.MustStringFormatter(
-		`%{color}%{time:15:04:05.000} [%{module}] %{level:.4s} : %{color:reset} %{message}`,
+		`%{color}%{time:15:04:05.000} [%{module}:%{shortfile}] %{level:.4s} : %{color:reset} %{message}`,
 	)
-	logLevel := logging.DEBUG
+	logLevel := logging.ERROR
+	switch logMode {
+	case "critical":
+		logLevel = logging.CRITICAL
+	case "error":
+		logLevel = logging.ERROR
+	case "warning":
+		logLevel = logging.WARNING
+	case "info":
+		logLevel = logging.INFO
+	case "debug":
+		logLevel = logging.DEBUG
+	}
 	backend := logging.NewLogBackend(f, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
-	logging.SetBackend(backendFormatter).SetLevel(logging.Level(logLevel), "ocms")
+	logging.SetBackend(backendFormatter).SetLevel(logging.Level(logLevel), "his")
 	return f, nil
 }
 

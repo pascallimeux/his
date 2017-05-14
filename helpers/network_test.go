@@ -2,109 +2,11 @@ package helpers
 
 import (
 	"testing"
-	"os"
 	"time"
 	"strings"
-	"github.com/pascallimeux/ocmsV2/settings"
 	sdkConfig "github.com/hyperledger/fabric-sdk-go/config"
-	//"encoding/json"
 )
 
-var netHelper  NetworkHelper
-var consHelper ConsentHelper
-var userHelper UserHelper
-var configuration settings.Settings
-var statStorePath string
-const(
-	CCVERSION   	   = "Orange Consent Application chaincode ver 3 Dated 2017-03-09"
-	APPID1      	   = "APP4TESTS1"
-	APPID2     	   = "APP4TESTS2"
-	APPID3     	   = "APP4TESTS3"
-	APPID4     	   = "APP4TESTS4"
-	APPID5     	   = "APP4TESTS5"
-	APPID6     	   = "APP4TESTS6"
-	OWNERID1   	   = "owner1"
-	OWNERID2   	   = "owner2"
-	OWNERID3   	   = "owner3"
-	CONSUMERID1	   = "consumer1"
-	CONSUMERID2	   = "consumer2"
-	CONSUMERID3	   = "consumer3"
-	DATATYPE1  	   = "type1"
-	DATAACCESS1	   = "access1"
-	TransactionTimeout = time.Millisecond * 1500
-)
-
-
-func setup() {
-
-	var err error
-	// Init settings
-	configuration, err = settings.GetSettings("..", "ocms_test")
-	if err != nil {
-		panic(err.Error())
-	}
-	statStorePath =  configuration.StatstorePath
-	adminCredentials := UserCredentials {UserName:configuration.Adminusername, EnrollmentSecret:configuration.AdminPwd}
-
-	// Init network helper
-	netHelper = NetworkHelper{Repo: configuration.Repo, StatStorePath: configuration.StatstorePath, ChainID: configuration.ChainID}
-	err = netHelper.StartNetwork(adminCredentials, configuration.ProviderName, configuration.NetworkConfigfile, configuration.ChannelConfigFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = configuration.InitLogger()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = netHelper.Init(adminCredentials)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	// Init user helper
-	userHelper = UserHelper{
-		StatStorePath: configuration.StatstorePath,
-	}
-	userHelper.Init(adminCredentials)
-
-	// Init consent helper
-	consHelper = ConsentHelper{ChainID:configuration.ChainID, StatStorePath:configuration.StatstorePath}
-	err = consHelper.Init(adminCredentials)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	// Deploy the smartcontract
-	netHelper.DeployCC(configuration.ChainCodePath, configuration.ChainCodeVersion, configuration.ChainCodeID)
-}
-
-func shutdown(){
-	_, err := consHelper.DeleteConsents4Application(configuration.ChainCodeID, APPID1)
-	if err != nil {
-		log.Fatal("DeleteConsent return error: ", err)
-	}
-	_, err = consHelper.DeleteConsents4Application(configuration.ChainCodeID, APPID2)
-	if err != nil {
-		log.Fatal("DeleteConsent return error: ", err)
-	}
-	_, err = consHelper.DeleteConsents4Application(configuration.ChainCodeID, APPID3)
-	if err != nil {
-		log.Fatal("DeleteConsent return error: ", err)
-	}
-	_, err = consHelper.DeleteConsents4Application(configuration.ChainCodeID, APPID4)
-	if err != nil {
-		log.Fatal("DeleteConsent return error: ", err)
-	}
-	_, err = consHelper.DeleteConsents4Application(configuration.ChainCodeID, APPID5)
-	if err != nil {
-		log.Fatal("DeleteConsent return error: ", err)
-	}
-	_, err = consHelper.DeleteConsents4Application(configuration.ChainCodeID, APPID6)
-	if err != nil {
-		log.Fatal("DeleteConsent return error: ", err)
-	}
-	defer configuration.CloseLogger()
-}
 func TestPeerconfig(t *testing.T) {
 	peersConfig, _ := sdkConfig.GetPeersConfig()
 	t.Log("***************************************nb peers:", len(peersConfig))
@@ -157,7 +59,7 @@ func TestQueryInfos(t *testing.T) {
 
 
 func TestQueryTransaction(t *testing.T) {
-	txID := createtransaction(t)
+	txID := createTransaction(t)
 	time.Sleep(time.Millisecond * 1500)
 	processedTransaction, err :=netHelper.QueryTransaction(txID)
 	if err != nil {
@@ -223,15 +125,8 @@ func TestQueryByChainCode(t *testing.T) {
 }
 
 
-func TestMain(m *testing.M) {
-	setup()
-	time.Sleep(time.Millisecond * 3000)
-	code := m.Run()
-	shutdown()
-	os.Exit(code)
-}
 
-func createtransaction(t *testing.T)string{
+func createTransaction(t *testing.T)string{
 	txID, err := consHelper.CreateConsent(configuration.ChainCodeID, APPID1, OWNERID1, CONSUMERID1, DATATYPE1, DATAACCESS1, getStringDateNow(0), getStringDateNow(7))
 	if err != nil {
 		t.Error("CreateConsent return error: ", err)

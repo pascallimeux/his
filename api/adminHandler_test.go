@@ -1,17 +1,16 @@
 package api
 
 import (
-	"github.com/pascallimeux/ocmsV2/helpers"
+	"github.com/pascallimeux/his/helpers"
+	utils "github.com/pascallimeux/his/modules/utils"
 	"testing"
 	"errors"
-	"strings"
-	"io/ioutil"
 	"net/http"
 	"encoding/json"
 )
 
 func TestRegisterUserAPINominal(t *testing.T) {
-	username := helpers.CreateRandomName()
+	username := utils.CreateRandomName()
 	registerUser := helpers.UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1" }
 	enrollmentSecret, err := sendRegister(registerUser)
 	if err != nil {
@@ -24,7 +23,7 @@ func TestRegisterUserAPINominal(t *testing.T) {
 
 
 func TestEnrollUserAPINominal(t *testing.T) {
-	username := helpers.CreateRandomName()
+	username := utils.CreateRandomName()
 	registerUser := helpers.UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1" }
 	enrollmentSecret, err := sendRegister(registerUser)
 	if err != nil {
@@ -33,7 +32,7 @@ func TestEnrollUserAPINominal(t *testing.T) {
 	if enrollmentSecret == "" {
 		t.Error("bad enrollmentSecret")
 	}
-	userCredentials := helpers.UserCredentials{UserName: username, EnrollmentSecret: enrollmentSecret}
+	userCredentials := utils.UserCredentials{UserName: username, Password: enrollmentSecret}
 	err = sendEnrollUser(userCredentials)
 	if err != nil {
 		t.Error(err)
@@ -42,7 +41,7 @@ func TestEnrollUserAPINominal(t *testing.T) {
 
 
 func TestRevokeUserAPINominal(t *testing.T) {
-	username := helpers.CreateRandomName()
+	username := utils.CreateRandomName()
 	registerUser := helpers.UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1" }
 	enrollmentSecret, err := sendRegister(registerUser)
 	if err != nil {
@@ -51,7 +50,7 @@ func TestRevokeUserAPINominal(t *testing.T) {
 	if enrollmentSecret == "" {
 		t.Error("bad enrollmentSecret")
 	}
-	userCredentials := helpers.UserCredentials{UserName: username, EnrollmentSecret: enrollmentSecret}
+	userCredentials := utils.UserCredentials{UserName: username, Password: enrollmentSecret}
 	err = sendEnrollUser(userCredentials)
 	if err != nil {
 		t.Error(err)
@@ -62,7 +61,7 @@ func TestRevokeUserAPINominal(t *testing.T) {
 	}
 }
 
-func sendRevokeUser(userCredentials helpers.UserCredentials) error {
+func sendRevokeUser(userCredentials utils.UserCredentials) error {
 	data, _ := json.Marshal(userCredentials)
 	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+REVOKE, string(data), ADMINNAME, ADMINPWD)
 	if err != nil {
@@ -78,7 +77,7 @@ func sendRevokeUser(userCredentials helpers.UserCredentials) error {
 	return nil
 }
 
-func sendEnrollUser(userCredentials helpers.UserCredentials) error {
+func sendEnrollUser(userCredentials utils.UserCredentials) error {
 	data, _ := json.Marshal(userCredentials)
 	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+ENROLL, string(data), ADMINNAME, ADMINPWD)
 	if err != nil {
@@ -113,45 +112,4 @@ func sendRegister(registerUser helpers.UserRegistrer) (string, error) {
 		return "", errors.New("bad status")
 	}
 	return response.Secret, nil
-}
-
-func buildRequestWithLoginPassword(method, uri, data, login, password string) (*http.Request, error) {
-	request, err := buildRequest(method, uri, data)
-	if err != nil {
-		return request, err
-	}
-	request.SetBasicAuth(login,password)
-	return request, nil
-}
-
-func buildRequest(method, uri, data string) (*http.Request, error) {
-	var requestData *strings.Reader
-	if data != "" {
-		requestData = strings.NewReader(data)
-	} else {
-		requestData = strings.NewReader(" ")
-		//requestData = nil
-	}
-	request, err := http.NewRequest(method, uri, requestData)
-	if err != nil {
-		return request, err
-	}
-	return request, nil
-}
-
-
-func executeRequest(request *http.Request) (int, []byte, error) {
-	status := 0
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		return status, nil, err
-	}
-	status = response.StatusCode
-	body_bytes, err2 := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
-	if err2 != nil {
-		return status, body_bytes, err2
-	}
-	return status, body_bytes, nil
 }

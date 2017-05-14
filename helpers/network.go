@@ -6,17 +6,23 @@ import(
 	fabricClient "github.com/hyperledger/fabric-sdk-go/fabric-client"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric-sdk-go/fabric-client/events"
-	"github.com/op/go-logging"
 	"github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"strconv"
-	"errors"
+	"github.com/pascallimeux/his/modules/utils"
+	"net/http"
+	"github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("ocms.helpers")
+var log = logging.MustGetLogger("his.helpers")
 
-type Helper interface {
-	Init(UserCredentials) error
+func InitHelper (r *http.Request, helper utils.Helper)  error {
+	userCredentials, err := utils.GetUserCredentials(r)
+	if err != nil {
+		return err
+	}
+	err = helper.Init(userCredentials)
+	return err
 }
 
 type NetworkHelper struct {
@@ -29,19 +35,19 @@ type NetworkHelper struct {
 	Initialized	bool
 }
 
-func (nh *NetworkHelper) Init(userCredentials UserCredentials) error{
-	chain, err := getChain(userCredentials, nh.StatStorePath, nh.ChainID)
+func (nh *NetworkHelper) Init(userCredentials utils.UserCredentials) error{
+	chain, err := utils.GetChain(userCredentials, nh.StatStorePath, nh.ChainID)
 	if err != nil {
 		return err
 	}
 	if err != nil {
 		return err
 	}
-	client, err := getClient(userCredentials, nh.StatStorePath)
+	client, err := utils.GetClient(userCredentials, nh.StatStorePath)
 	if err != nil {
 		return err
 	}
-	eventHub, err := getEventHub()
+	eventHub, err := utils.GetEventHub()
 	if err != nil {
 		return err
 	}
@@ -55,7 +61,7 @@ func (nh *NetworkHelper) Init(userCredentials UserCredentials) error{
 	return nil
 }
 
-func (nh *NetworkHelper) StartNetwork(userCredentials UserCredentials, providerName, netConfigFile, channelConfig string)  error{
+func (nh *NetworkHelper) StartNetwork(userCredentials utils.UserCredentials, providerName, netConfigFile, channelConfig string)  error{
 	log.Debug("InitNetwork(username:"+ userCredentials.UserName+" providerName:"+ providerName+") : calling method -")
 	initError := fmt.Errorf("InitNetwork return error")
 	// Init SDK config
@@ -177,43 +183,4 @@ func (nh *NetworkHelper) QueryByChainCode(chaincodeName string)([][]byte, error)
 func (nh *NetworkHelper) GetPeers()([]fabricClient.Peer){
 	log.Debug("GetPeers() : calling method -")
 	return nh.Chain.GetPeers()
-}
-
-func getChain(userCredentials UserCredentials, statStorePath, chainID string) (fabricClient.Chain, error) {
-	log.Debug("GetChain(username:"+ userCredentials.UserName+") : calling method -")
-	var chain fabricClient.Chain
-
-	client, err := getClient(userCredentials, statStorePath)
-	if err != nil {
-		return chain, errors.New("getClient return error: %v" + err.Error())
-	}
-	chain, err = sdkUtil.GetChain(client, chainID)
-	if err != nil {
-		log.Error("Create chain ", chainID," failed: ", err)
-		return chain, err
-	}
-	return chain, nil
-}
-
-func getEventHub() (events.EventHub, error) {
-	log.Debug("getEventHub() : calling method -")
-	eventHub := events.NewEventHub()
-	foundEventHub := false
-	peerConfig, err := sdkConfig.GetPeersConfig()
-	if err != nil {
-		return nil, fmt.Errorf("Error reading peer config: %v", err)
-	}
-	for _, p := range peerConfig {
-		if p.EventHost != "" && p.EventPort != 0 {
-			log.Debug("EventHub connect to peer (", p.EventHost,":", p.EventPort,")")
-			eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", p.EventHost, p.EventPort),
-				p.TLS.Certificate, p.TLS.ServerHostOverride)
-			foundEventHub = true
-			break
-		}
-	}
-	if !foundEventHub {
-		return nil, fmt.Errorf("No EventHub configuration found")
-	}
-	return eventHub, nil
 }

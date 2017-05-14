@@ -4,14 +4,11 @@ import (
 	fabricClient "github.com/hyperledger/fabric-sdk-go/fabric-client"
 	fabricCAClient "github.com/hyperledger/fabric-sdk-go/fabric-ca-client"
 	"errors"
-	sdkUtil "github.com/hyperledger/fabric-sdk-go/fabric-client/helpers"
 	"github.com/google/certificate-transparency/go/x509"
 	"github.com/hyperledger/fabric/bccsp"
 	"encoding/pem"
 	"io/ioutil"
-	"math/rand"
-	"strconv"
-	"time"
+	"github.com/pascallimeux/his/modules/utils"
 )
 
 type UserHelper struct {
@@ -23,21 +20,16 @@ type UserHelper struct {
 }
 
 
-type UserCredentials struct {
-	UserName 	 string	   `json:"username"`
-	EnrollmentSecret string	   `json:"password"`
-}
-
 type UserRegistrer struct {
 	Name 		 string	`json:"name"`
 	Type 		 string	`json:"type"`
 	Affiliation      string	`json:"affiliation"`
 }
 
-func (uh *UserHelper) Init (userCredentials UserCredentials) error{
-	client, err := sdkUtil.GetClient("admin", "adminpw", uh.StatStorePath)
+func (uh *UserHelper) Init (userCredentials utils.UserCredentials) error{
+	client, err := utils.GetClient(userCredentials, uh.StatStorePath)
 	if err != nil {
-		return errors.New("Create client failed: %v" + err.Error())
+		return err
 	}
 	uh.AdmClient = client
 	caClient, err := fabricCAClient.NewFabricCAClient()
@@ -65,9 +57,9 @@ func (uh *UserHelper) RegisterUser(registerUser UserRegistrer) (string, error) {
 }
 
 
-func (uh *UserHelper) EnrollUser(userCredentials UserCredentials) error{
+func (uh *UserHelper) EnrollUser(userCredentials utils.UserCredentials) error{
 	log.Debug("enrollUser(userName:"+ userCredentials.UserName+") : calling method -")
-	key, cert, err := uh.CaClient.Enroll(userCredentials.UserName, userCredentials.EnrollmentSecret)
+	key, cert, err := uh.CaClient.Enroll(userCredentials.UserName, userCredentials.Password)
 	if err != nil {
 		return errors.New("Error enroling user: %s"+ err.Error())
 	}
@@ -82,7 +74,7 @@ func (uh *UserHelper) EnrollUser(userCredentials UserCredentials) error{
 	return nil
 }
 
-func (uh *UserHelper) ReenrollUser(userCredentials UserCredentials) error{
+func (uh *UserHelper) ReenrollUser(userCredentials utils.UserCredentials) error{
 	log.Debug("ReenrollUser(userName:"+ userCredentials.UserName+") : calling method -")
 	enrolleduser := fabricClient.NewUser(userCredentials.UserName)
 	//enrolleduser.SetEnrollmentCertificate(ecert)
@@ -102,7 +94,7 @@ func (uh *UserHelper) ReenrollUser(userCredentials UserCredentials) error{
 	return nil
 }
 
-func (uh *UserHelper) RevokeUser(userCredentials UserCredentials)error{
+func (uh *UserHelper) RevokeUser(userCredentials utils.UserCredentials)error{
 	log.Debug("revokeUser(userName:"+ userCredentials.UserName+") : calling method -")
 	revokeRequest := fabricCAClient.RevocationRequest{Name: userCredentials.UserName}
 	err := uh.CaClient.Revoke(uh.AdmUser, &revokeRequest)
@@ -112,7 +104,7 @@ func (uh *UserHelper) RevokeUser(userCredentials UserCredentials)error{
 	return nil
 }
 
-func (uh *UserHelper) GetUser(userCredentials UserCredentials) (fabricClient.User, error) {
+func (uh *UserHelper) GetUser(userCredentials utils.UserCredentials) (fabricClient.User, error) {
 	log.Debug("getUser(username:"+ userCredentials.UserName+") : calling method -")
 	user, err := uh.AdmClient.LoadUserFromStateStore(userCredentials.UserName)
 	if err != nil {
@@ -120,7 +112,7 @@ func (uh *UserHelper) GetUser(userCredentials UserCredentials) (fabricClient.Use
 	}
 	if user == nil {
 		log.Debug("---Enroll the user %s:"+userCredentials.UserName)
-		key, cert, err := uh.CaClient.Enroll(userCredentials.UserName, userCredentials.EnrollmentSecret)
+		key, cert, err := uh.CaClient.Enroll(userCredentials.UserName, userCredentials.Password)
 		if err != nil {
 			return user, errors.New("Enroll return error: %v"+ err.Error())
 		}
@@ -170,18 +162,3 @@ func (uh *UserHelper) GetUser(userCredentials UserCredentials) (fabricClient.Use
 	return user, nil
 }
 
-
-func getClient(userCredentials UserCredentials, statStorePath string) (fabricClient.Client, error) {
-	log.Debug("GetClient(username:"+ userCredentials.UserName+") : calling method -")
-	client, err := sdkUtil.GetClient(userCredentials.UserName, userCredentials.EnrollmentSecret, statStorePath)
-	if err != nil {
-		log.Debug("getClient return error: %v" + err.Error())
-		return client, errors.New("getClient return error: %v" + err.Error())
-	}
-	return client, nil
-}
-
-func CreateRandomName() string {
-	rand.Seed(time.Now().UnixNano())
-	return "user" + strconv.Itoa(rand.Intn(500000))
-}

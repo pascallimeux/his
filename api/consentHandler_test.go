@@ -3,89 +3,14 @@ package api
 import (
 	"errors"
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"github.com/pascallimeux/ocmsV2/helpers"
-	"github.com/pascallimeux/ocmsV2/settings"
+	"github.com/pascallimeux/his/modules/ocms"
 	"net/http"
-	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 )
 
-var configuration settings.Settings
-var httpServerTest *httptest.Server
-const(
-	ADMINNAME          = "admin"
-	ADMINPWD           = "admpw"
-	APPID              = "apptest"
-	TransactionTimeout = time.Millisecond * 1500
-)
-
-func TestMain(m *testing.M) {
-	setup()
-	code := m.Run()
-	shutdown()
-	os.Exit(code)
-}
-
-func setup() {
-	// Init settings
-	var err error
-	configuration, err = settings.GetSettings("..", "ocms_test")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	networkHelper := helpers.NetworkHelper{
-		Repo:                   configuration.Repo,
-		StatStorePath:          configuration.StatstorePath,
-		ChainID:         	configuration.ChainID}
-
-	adminCredentials := helpers.UserCredentials {
-		UserName:configuration.Adminusername,
-		EnrollmentSecret:configuration.AdminPwd}
-
-	err = networkHelper.StartNetwork(adminCredentials, configuration.ProviderName, configuration.NetworkConfigfile, configuration.ChannelConfigFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = configuration.InitLogger()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	networkHelper.DeployCC(configuration.ChainCodePath, configuration.ChainCodeVersion, configuration.ChainCodeID)
-	/*err = netHelper.DeployCC(configuration.ChainCodePath, configuration.ChainCodeVersion, configuration.ChainCodeID)
-	if err != nil {
-		log.Fatal(err.Error())
-	}*/
-
-	// Init application context
-	appContext := AppContext{
-		ChainCodeID: 		configuration.ChainCodeID,
-		Repo:                   configuration.Repo,
-		StatStorePath:          configuration.StatstorePath,
-		ChainID:         	configuration.ChainID,
-	}
-	router := mux.NewRouter().StrictSlash(false)
-	appContext.CreateOCMSRoutes(router)
-
-	// Init routes for application
-	appContext.CreateOCMSRoutes(router)
-
-	// Init http server for tests
-	httpServerTest = httptest.NewServer(router)
-
-}
-
-func shutdown() {
-	defer httpServerTest.Close()
-	defer configuration.CloseLogger()
-}
-
 func TestCreateConsentFromAPINominal(t *testing.T) {
-	consent := helpers.Consent{OwnerID: "1111", ConsumerID: "2222"}
+	consent := ocms.Consent{OwnerID: "1111", ConsumerID: "2222"}
 	consentID, err := createConsent(consent)
 	if err != nil {
 		t.Error(err)
@@ -96,7 +21,7 @@ func TestCreateConsentFromAPINominal(t *testing.T) {
 }
 
 func TestGetConsentDetailFromAPINominal(t *testing.T) {
-	consent := helpers.Consent{OwnerID: "OOOO", ConsumerID: "AAAA"}
+	consent := ocms.Consent{OwnerID: "OOOO", ConsumerID: "AAAA"}
 	consentID, err := createConsent(consent)
 	if err != nil {
 		t.Error(err)
@@ -113,9 +38,9 @@ func TestGetConsentDetailFromAPINominal(t *testing.T) {
 }
 
 func TestGetConsentsFromAPINominal(t *testing.T) {
-	createConsent(helpers.Consent{OwnerID: "1111", ConsumerID: "2222"})
-	createConsent(helpers.Consent{OwnerID: "1111", ConsumerID: "3333"})
-	createConsent(helpers.Consent{OwnerID: "1111", ConsumerID: "4444"})
+	createConsent(ocms.Consent{OwnerID: "1111", ConsumerID: "2222"})
+	createConsent(ocms.Consent{OwnerID: "1111", ConsumerID: "3333"})
+	createConsent(ocms.Consent{OwnerID: "1111", ConsumerID: "4444"})
 	consents, err := getListOfConsents("", "")
 	if err != nil {
 		t.Error(err)
@@ -127,9 +52,9 @@ func TestGetConsentsFromAPINominal(t *testing.T) {
 
 func TestGetConsents4OwnerFromAPINominal(t *testing.T) {
 	ownerid := "1111"
-	createConsent(helpers.Consent{OwnerID: "1111", ConsumerID: "2222"})
-	createConsent(helpers.Consent{OwnerID: "1111", ConsumerID: "3333"})
-	createConsent(helpers.Consent{OwnerID: "1111", ConsumerID: "4444"})
+	createConsent(ocms.Consent{OwnerID: "1111", ConsumerID: "2222"})
+	createConsent(ocms.Consent{OwnerID: "1111", ConsumerID: "3333"})
+	createConsent(ocms.Consent{OwnerID: "1111", ConsumerID: "4444"})
 	consents, err := getListOfConsents(ownerid, "")
 	if err != nil {
 		t.Error(err)
@@ -141,9 +66,9 @@ func TestGetConsents4OwnerFromAPINominal(t *testing.T) {
 
 func TestGetConsents4ConsumerFromAPINominal(t *testing.T) {
 	consumerid := "3333"
-	createConsent(helpers.Consent{OwnerID: "1111", ConsumerID: consumerid})
-	createConsent(helpers.Consent{OwnerID: "2222", ConsumerID: consumerid})
-	createConsent(helpers.Consent{OwnerID: "3333", ConsumerID: consumerid})
+	createConsent(ocms.Consent{OwnerID: "1111", ConsumerID: consumerid})
+	createConsent(ocms.Consent{OwnerID: "2222", ConsumerID: consumerid})
+	createConsent(ocms.Consent{OwnerID: "3333", ConsumerID: consumerid})
 	consents, err := getListOfConsents("", consumerid)
 	if err != nil {
 		t.Error(err)
@@ -155,12 +80,12 @@ func TestGetConsents4ConsumerFromAPINominal(t *testing.T) {
 
 
 
-func createConsent(consent helpers.Consent) (string, error) {
-	var responseConsent helpers.Consent
+func createConsent(consent ocms.Consent) (string, error) {
+	var responseConsent ocms.Consent
 	consent.Action = "create"
 	consent.AppID = APPID
 	data, _ := json.Marshal(consent)
-	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
+	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
 	if err1 != nil {
 		return "", err1
 	}
@@ -179,11 +104,11 @@ func createConsent(consent helpers.Consent) (string, error) {
 	return responseConsent.ConsentID, nil
 }
 
-func getConsent(consentID string) (helpers.Consent, error) {
-	consent := helpers.Consent{Action: "get", AppID: APPID, ConsentID: consentID}
-	responseConsent := helpers.Consent{}
+func getConsent(consentID string) (ocms.Consent, error) {
+	consent := ocms.Consent{Action: "get", AppID: APPID, ConsentID: consentID}
+	responseConsent := ocms.Consent{}
 	data, _ := json.Marshal(consent)
-	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
+	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
 	if err1 != nil {
 		return responseConsent, err1
 	}
@@ -201,9 +126,9 @@ func getConsent(consentID string) (helpers.Consent, error) {
 	return responseConsent, nil
 }
 
-func getListOfConsents(ownerID, consumerID string) ([]helpers.Consent, error) {
-	consent := helpers.Consent{Action: "list", AppID: APPID}
-	consents := []helpers.Consent{}
+func getListOfConsents(ownerID, consumerID string) ([]ocms.Consent, error) {
+	consent := ocms.Consent{Action: "list", AppID: APPID}
+	consents := []ocms.Consent{}
 	if ownerID != "" {
 		consent.OwnerID = ownerID
 		consent.Action = "list4owner"
@@ -212,7 +137,7 @@ func getListOfConsents(ownerID, consumerID string) ([]helpers.Consent, error) {
 		consent.Action = "list4consumer"
 	}
 	data, _ := json.Marshal(consent)
-	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
+	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
 	if err1 != nil {
 		return consents, err1
 	}
