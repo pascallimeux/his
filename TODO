@@ -1,27 +1,29 @@
-X faire uncontainer docker pour la livraison
+X faire un container docker pour la livraison
 X Gestion des logs avec go-logging
 X resoudre pb de transaction avec ack
 X ecrire les scripts startHP/stopHP/cleanHP
 X renommer le projet en HIS et créer dans github
 X separer le code de consent et de his
-- faire des tests avec plusieurs containers (pour comprendre le fonctionnement de keystore et enroll_user etc)
-- verifier le fonctionnement des logs entre sdk et his avec fichier et niveau
-- refactorer le paramétrage
-- mettre des logs pour chaque appel de fonction et chaque erreur
-- retour d'erreur des API
+X faire des tests avec plusieurs containers (pour comprendre le fonctionnement de keystore et enroll_user etc)
+X verifier le fonctionnement des logs entre sdk et his avec fichier et niveau
+X mettre des logs pour chaque appel de fonction et chaque erreur
+X retour d'erreur des API
+
 - refactorer le code
+- refactorer le paramétrage
 - refactorer les APIs
+- refactoriser le code (majuscule, methode publique etc.)
 
 - creer un fichier .tx pour créer un nouveau channel
 - tester les get sur client et sur chain et prevoir api pour deploiement de peer etc...
 - faire les classes de tests associées aux handler et aux helpers et verifier le contenu des tests
-- faire les tests postman
+- faire les tests postman et tests de monte en charge et monté en charge multi thread
 
-
+- analyser block et transaction
 - verifier les objets (string) renvoyés par les api de type query
 - les api query qui ne fonctionnent pas
 - mettre les APIs en https
-- refactoriser le code (majuscule, methode publique etc.)
+
 
 
 voir le paramétage pour configurer le numéro IP pour le sdk-go

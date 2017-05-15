@@ -65,7 +65,7 @@ func TestQueryTransaction(t *testing.T) {
 	if err != nil {
 		t.Error("QueryTransaction return error: ", err)
 	}
-	t.Log("transaction: ", processedTransaction.String())
+	t.Log("transaction: ", processedTransaction.TransactionEnvelope.Payload)
 }
 
 func TestQueryBlockByNumber(t *testing.T) {
@@ -75,7 +75,8 @@ func TestQueryBlockByNumber(t *testing.T) {
 	}
 	//dis,_ := json.Marshal(block)
 	//t.Log("block: ", dis)
-	t.Log("block: ", block.String())
+	t.Log("block data : ", block.Data.Data)
+	t.Log("block metadata : ", block.Metadata.Metadata)
 }
 
 func TestQueryBlockByHash(t *testing.T) {

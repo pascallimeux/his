@@ -18,19 +18,22 @@ func (a *AppContext) registerUser(w http.ResponseWriter, r *http.Request) {
 	var user helpers.UserRegistrer
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
 	err = helpers.InitHelper(r, userHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	enrollmentSecret := EnrollmentSecret{}
 	enrollmentSecret.Secret, err = userHelper.RegisterUser(user)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 	}
 	content, _ := json.Marshal(enrollmentSecret)
 	w.Header().Set("Content-Type", "application/json")
@@ -45,18 +48,21 @@ func (a *AppContext) enrollUser(w http.ResponseWriter, r *http.Request) {
 	var credentials utils.UserCredentials
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
 	err = helpers.InitHelper(r, userHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	err = userHelper.EnrollUser(credentials)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	content := []byte("")
@@ -67,22 +73,25 @@ func (a *AppContext) enrollUser(w http.ResponseWriter, r *http.Request) {
 
 //HTTP Post - /his/v0/admin/user/revoke
 func (a *AppContext) revokeUser(w http.ResponseWriter, r *http.Request) {
-	log.Debug("enrollUser() : calling method -")
+	log.Debug("revokeUser() : calling method -")
 	var credentials utils.UserCredentials
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
 	err = helpers.InitHelper(r, userHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	err = userHelper.RevokeUser(credentials)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	content := []byte("")

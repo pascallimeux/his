@@ -6,7 +6,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pascallimeux/his/helpers"
 	"github.com/pascallimeux/his/modules/utils"
+	"github.com/pkg/errors"
 )
+
+var badRequest =errors.New("Bad request")
 
 //HTTP Get - /his/v0/dashboard/chain
 func (a *AppContext) blockchainInfo(w http.ResponseWriter, r *http.Request) {
@@ -15,16 +18,19 @@ func (a *AppContext) blockchainInfo(w http.ResponseWriter, r *http.Request) {
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err = helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	blockchainInfo, err := netHelper.QueryInfos()
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 	}
 	content, err := json.Marshal(blockchainInfo)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -39,16 +45,19 @@ func (a *AppContext) getChannels(w http.ResponseWriter, r *http.Request) {
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err = helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	channels, err := netHelper.QueryChannels()
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 	}
 	content, err := json.Marshal(channels)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -58,18 +67,20 @@ func (a *AppContext) getChannels(w http.ResponseWriter, r *http.Request) {
 
 //HTTP Get - /his/v0/dashboard/peers
 func (a *AppContext) getPeers(w http.ResponseWriter, r *http.Request) {
-	log.Debug("getChannels() : calling method -")
+	log.Debug("getPeers() : calling method -")
 	var err error
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err = helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	peers :=netHelper.GetPeers()
 	content, err := json.Marshal(peers)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -84,16 +95,19 @@ func (a *AppContext) getInstalledCC(w http.ResponseWriter, r *http.Request) {
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err = helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	cc, err := netHelper.GetInstalledChainCode()
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 	}
 	content, err := json.Marshal(cc)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -108,16 +122,19 @@ func (a *AppContext) getInstantiatedCC(w http.ResponseWriter, r *http.Request) {
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err = helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	cc, err := netHelper.GetInstanciateChainCode()
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 	}
 	content, err := json.Marshal(cc)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -134,17 +151,20 @@ func (a *AppContext) transactionDetails(w http.ResponseWriter, r *http.Request) 
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err := helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	transaction, err := netHelper.QueryTransaction(tr_uuid)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	content, err := json.Marshal(transaction)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -158,20 +178,24 @@ func (a *AppContext) blockByNumber(w http.ResponseWriter, r *http.Request) {
 	blocNb := vars["blocknb"]
 	message := fmt.Sprintf("blockByNumber(blocknb=%s) : calling method -", blocNb)
 	log.Debug(message)
+
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err := helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	block, err := netHelper.QueryBlockByNumber(blocNb)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	content, err := json.Marshal(block)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -184,22 +208,25 @@ func (a *AppContext) blockByNumber(w http.ResponseWriter, r *http.Request) {
 func (a *AppContext) blockByHash(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	blockHash := vars["blockhash"]
-	message := fmt.Sprintf("transactionDetails(blockHash=%s) : calling method -", blockHash)
+	message := fmt.Sprintf("blockByHash(blockHash=%s) : calling method -", blockHash)
 	log.Debug(message)
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err := helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	block, err := netHelper.QueryBlockByHash(blockHash)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	content, err := json.Marshal(block)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -217,17 +244,20 @@ func (a *AppContext) queryByCC(w http.ResponseWriter, r *http.Request) {
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err := helpers.InitHelper(r, netHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	response, err := netHelper.QueryByChainCode(chaincodeName)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	content, err := json.Marshal(response)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

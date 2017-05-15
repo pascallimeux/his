@@ -10,20 +10,10 @@ import(
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"strconv"
 	"github.com/pascallimeux/his/modules/utils"
-	"net/http"
 	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("his.helpers")
-
-func InitHelper (r *http.Request, helper utils.Helper)  error {
-	userCredentials, err := utils.GetUserCredentials(r)
-	if err != nil {
-		return err
-	}
-	err = helper.Init(userCredentials)
-	return err
-}
 
 type NetworkHelper struct {
 	ChainID         string
@@ -36,6 +26,7 @@ type NetworkHelper struct {
 }
 
 func (nh *NetworkHelper) Init(userCredentials utils.UserCredentials) error{
+	log.Debug("Init() : calling method -")
 	chain, err := utils.GetChain(userCredentials, nh.StatStorePath, nh.ChainID)
 	if err != nil {
 		return err
@@ -62,7 +53,7 @@ func (nh *NetworkHelper) Init(userCredentials utils.UserCredentials) error{
 }
 
 func (nh *NetworkHelper) StartNetwork(userCredentials utils.UserCredentials, providerName, netConfigFile, channelConfig string)  error{
-	log.Debug("InitNetwork(username:"+ userCredentials.UserName+" providerName:"+ providerName+") : calling method -")
+	log.Debug("StartNetwork(username:"+ userCredentials.UserName+" providerName:"+ providerName+") : calling method -")
 	initError := fmt.Errorf("InitNetwork return error")
 	// Init SDK config
 	err := sdkConfig.InitConfig(netConfigFile)
@@ -137,9 +128,6 @@ func (nh *NetworkHelper) QueryInfos()(*common.BlockchainInfo, error){
 func (nh *NetworkHelper) QueryTransaction(transactionID string)(*pb.ProcessedTransaction, error){
 	log.Debug("QueryTransaction("+transactionID+") : calling method -")
 	processTransaction, err := nh.Chain.QueryTransaction(transactionID)
-	if err == nil {
-		log.Debug("PAYLOAD:", processTransaction.TransactionEnvelope.String())
-	}
 	return processTransaction, err
 }
 

@@ -56,8 +56,8 @@ func GetClient(userCredentials UserCredentials, statStorePath string) (fabricCli
 	log.Debug("GetClient(username:"+ userCredentials.UserName+") : calling method -")
 	client, err := sdkUtil.GetClient(userCredentials.UserName, userCredentials.Password, statStorePath)
 	if err != nil {
-		log.Debug("getClient return error: %v" + err.Error())
-		return client, errors.New("getClient return error: %v" + err.Error())
+		log.Error("getClient return error: %v" + err.Error())
+		return client, errors.New("getClient error")
 	}
 	return client, nil
 }

@@ -1,7 +1,7 @@
 FROM debian:latest
 
 RUN apt-get update
-RUN apt-get install -y libltdl-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y libltdl-dev nano && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/his
 RUN mkdir -p /var/log/his

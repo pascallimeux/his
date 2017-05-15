@@ -30,7 +30,7 @@ func SendError(w http.ResponseWriter, err error) {
 	log.Debug("sendError() : calling method -")
 	libelle := err.Error()
 	libelle = strings.Replace(libelle, "\"", "'", -1)
-	log.Error("sendError: ", libelle)
+	log.Error("send http error: ", libelle)
 	message := "{\"content\":\"" + libelle + "\"} "
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)

@@ -8,7 +8,7 @@ import (
 	"errors"
 	utils "github.com/pascallimeux/his/modules/utils"
 )
-
+var badRequest =errors.New("Bad request")
 
 type Version struct {
 	Version string
@@ -24,13 +24,15 @@ func (a *OCMSContext) getVersion(w http.ResponseWriter, r *http.Request) {
 	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
 	err := utils.InitHelper(r, consentHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	version := Version{}
 	version.Version, err = consentHelper.GetVersion(a.ChainCodeID)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 	}
 	content, _ := json.Marshal(version)
 	w.Header().Set("Content-Type", "application/json")
@@ -46,13 +48,15 @@ func (a *OCMSContext) processConsent(w http.ResponseWriter, r *http.Request) {
 	var consent Consent
 	err := json.NewDecoder(r.Body).Decode(&consent)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
 	err = utils.InitHelper(r, consentHelper)
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	switch action := consent.Action; action {
@@ -71,12 +75,13 @@ func (a *OCMSContext) processConsent(w http.ResponseWriter, r *http.Request) {
 	case "isconsent":
 		bytes, err = a.isConsent(consentHelper, a.ChainCodeID, consent)
 	default:
-		log.Error("bad action request")
-		utils.SendError(w, err)
+		log.Error("bad action request: ", action)
+		utils.SendError(w, errors.New("Bad action request"))
 		return
 	}
 	if err != nil {
-		utils.SendError(w, err)
+		log.Error(err)
+		utils.SendError(w, badRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -86,6 +91,7 @@ func (a *OCMSContext) processConsent(w http.ResponseWriter, r *http.Request) {
 
 
 func (a *OCMSContext) createConsent(consentHelper *ConsentHelper, chainCodeID string, consent Consent) ([]byte, error) {
+	log.Debug("createConsent(applicationID:"+ consent.AppID+") : calling method -")
 	err := check_args(&consent)
 	var message string
 	if err != nil {

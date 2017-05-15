@@ -47,7 +47,7 @@ func (uh *UserHelper) Init (userCredentials utils.UserCredentials) error{
 }
 
 func (uh *UserHelper) RegisterUser(registerUser UserRegistrer) (string, error) {
-	log.Debug("registerUser(name:"+ registerUser.Name+" Type:" + registerUser.Type +" Affiliation:"+ registerUser.Affiliation+") : calling method -")
+	log.Debug("RegisterUser(name:"+ registerUser.Name+" Type:" + registerUser.Type +" Affiliation:"+ registerUser.Affiliation+") : calling method -")
 	registerRequest := fabricCAClient.RegistrationRequest{Name: registerUser.Name, Type: registerUser.Type, Affiliation: registerUser.Affiliation}
 	enrolmentSecret, err := uh.CaClient.Register(uh.AdmUser, &registerRequest)
 	if err != nil {
@@ -58,7 +58,7 @@ func (uh *UserHelper) RegisterUser(registerUser UserRegistrer) (string, error) {
 
 
 func (uh *UserHelper) EnrollUser(userCredentials utils.UserCredentials) error{
-	log.Debug("enrollUser(userName:"+ userCredentials.UserName+") : calling method -")
+	log.Debug("EnrollUser(userName:"+ userCredentials.UserName+") : calling method -")
 	key, cert, err := uh.CaClient.Enroll(userCredentials.UserName, userCredentials.Password)
 	if err != nil {
 		return errors.New("Error enroling user: %s"+ err.Error())
@@ -95,7 +95,7 @@ func (uh *UserHelper) ReenrollUser(userCredentials utils.UserCredentials) error{
 }
 
 func (uh *UserHelper) RevokeUser(userCredentials utils.UserCredentials)error{
-	log.Debug("revokeUser(userName:"+ userCredentials.UserName+") : calling method -")
+	log.Debug("RevokeUser(userName:"+ userCredentials.UserName+") : calling method -")
 	revokeRequest := fabricCAClient.RevocationRequest{Name: userCredentials.UserName}
 	err := uh.CaClient.Revoke(uh.AdmUser, &revokeRequest)
 	if err != nil {
@@ -105,7 +105,7 @@ func (uh *UserHelper) RevokeUser(userCredentials utils.UserCredentials)error{
 }
 
 func (uh *UserHelper) GetUser(userCredentials utils.UserCredentials) (fabricClient.User, error) {
-	log.Debug("getUser(username:"+ userCredentials.UserName+") : calling method -")
+	log.Debug("GetUser(username:"+ userCredentials.UserName+") : calling method -")
 	user, err := uh.AdmClient.LoadUserFromStateStore(userCredentials.UserName)
 	if err != nil {
 		return user, errors.New("client.GetUserContext return error: %v"+ err.Error())
