@@ -78,6 +78,20 @@ func TestGetConsents4ConsumerFromAPINominal(t *testing.T) {
 	}
 }
 
+func TestGetConsents4ConsumerOwnerFromAPINominal(t *testing.T) {
+	consumerid := "3333"
+	ownerid := "1111"
+	createConsent(ocms.Consent{OwnerID: ownerid, ConsumerID: consumerid})
+	createConsent(ocms.Consent{OwnerID: "2222", ConsumerID: consumerid})
+	createConsent(ocms.Consent{OwnerID: ownerid, ConsumerID: "2222"})
+	consents, err := getListOfConsents("", consumerid)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, consent := range consents {
+		t.Log(consent.Print())
+	}
+}
 
 
 func createConsent(consent ocms.Consent) (string, error) {

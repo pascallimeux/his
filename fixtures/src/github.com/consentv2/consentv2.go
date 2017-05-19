@@ -36,7 +36,6 @@ import (
 	"time"
 	"encoding/json"
 	"strconv"
-	//"github.com/op/go-logging"
 )
 
 
@@ -45,6 +44,7 @@ import (
 // =====================================================================================================================
 const (
 	// chaincode constants
+	LOGGERMODULE   = "consent"
 	VERSION        = "Orange Consent Application chaincode ver 3 Dated 2017-03-09"
 	ACTIVE         = "active"
 	NOT_ACTIVE     = "unactive"
@@ -52,10 +52,11 @@ const (
 	NOT_AUTHORIZED = "False"
 
 	//Chainccode index
-	indexApp       = "app~id" 		// to get all consents for appID
-	indexOwner     = "app~owner~id" 	// to get all consents for appID and ownerID
-	indexConsumer  = "app~consumer~id" 	// to get all consents for appID and consumerID
-	indexIsConsent = "app~isconsent"	// to check if a consent exist
+	indexApp       = "app~id" 			// to get all consents for appID
+	indexOwner     = "app~owner~id" 		// to get all consents for appID and ownerID
+	indexConsumer  = "app~consumer~id" 		// to get all consents for appID and consumerID
+	indexConsumerOwner = "app~consumer~owner~id" 	// to get all consents for appID consumerID and ownerID
+	indexIsConsent = "app~isconsent"		// to check if a consent exist
 
 	// Chaincode errors
 	errorArgs                 = "Incorrect number of arguments."
@@ -70,14 +71,16 @@ const (
 	errorRemoveConsent4App    = "Remove all consent for appID:"
 	errorGetConsents4Owner    = "Get list of consents for ownerID:"
 	errorGetConsents4Consumer = "Get list of consents for consumerID:"
+	errorGetConsents4ConsumerOwner = "Get list of consents for consumerID and ownerID:"
 	errorGetConsents4AppID    = "Get list of consents for appID:"
 	errorGetConsent4Params    = "Get consent for parms:"
 	errorDateBegin            = "Dt_begin format error:"
 	errorDateEnd              = "Dt_end format error:"
 	errorPeriod               = "Period not valid from:"
 )
-var logger = shim.NewLogger("consent")
-//var logger = logging.MustGetLogger("consent")
+var logger = shim.NewLogger(LOGGERMODULE)
+//var logger = logging.MustGetLogger(LOGGERMODULE)
+
 type ConsentCC struct {
 }
 
@@ -111,7 +114,6 @@ type consent struct {
 // =====================================================================================================================
 func (c *ConsentCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Debug("Init() : calling method -")
-	fmt.Println("Init() : calling method -")
 	return shim.Success(nil)
 }
 
@@ -121,7 +123,6 @@ func (c *ConsentCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
 func (c *ConsentCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	function, args := stub.GetFunctionAndParameters()
 	logger.Debug("Invoke("+function+") : calling method -")
-	fmt.Println("****Invoke("+function+") : calling method -****")
 	switch function {
 	case "postconsent":
 		return c.createConsent(stub, args)
@@ -135,6 +136,8 @@ func (c *ConsentCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return c.getOwnerConsents(stub, args)
 	case "getconsumerconsents" :
 		return c.getConsumerConsents(stub, args)
+	case "getconsumerownerconsents" :
+		return c.getConsumerOwnerConsents(stub, args)
 	case "getconsents" :
 		return c.getConsents4AppID(stub, args)
 	case "isconsent" :
@@ -174,20 +177,19 @@ func (c *ConsentCC)createConsent(stub shim.ChaincodeStubInterface, args []string
 		errStr := errorArgs+" expecting appID, ownerID, consumerID, dataType, dataAccess, dt_begin, dt_end!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("createConsent(Ownerid:"+ args[0]+" Consumerid:"+ args[1]+ " Datatype:"+ args[2]+ " Dataaccess:" +
-		args[3]+ " Dt_begin:"+ args[4]+ " Dt_end:"+ args[5] +") : calling method -")
+	appID      := args[0]
+	state      := ACTIVE
+	consentID  := stub.GetTxID()
+	ownerID    := args[1]
+	consumerID := args[2]
+	dataType   := args[3]
+	dataAccess := args[4]
+	logger.Debug("createConsent(AppID=" + appID + ", consentID=" + consentID + ", Ownerid=" + ownerID + "  Consumerid=" + consumerID + ", Datatype=" + dataType + ", Dataaccess=" +
+		dataAccess + ", Dt_begin=" + args[5] + ", Dt_end=" + args[6] + ") : calling method -")
 	dt_begin, dt_end, err := checkDates(args[5], args[6])
 	if err != nil {
 		return shim.Error(buildError(err.Error()))
 	}
-	appID := args[0]
-	state := ACTIVE
-	consentID := stub.GetTxID()
-	ownerID := args[1]
-	consumerID := args[2]
-	dataType := args[3]
-	dataAccess := args[4]
-
 	consent := &consent{appID, state, consentID, ownerID, consumerID, dataType, dataAccess, dt_begin, dt_end}
 	consentSONasBytes, err := json.Marshal(consent)
 	if err != nil {
@@ -216,9 +218,10 @@ func (c *ConsentCC)getConsent(stub shim.ChaincodeStubInterface, args []string) p
 		errStr := errorArgs+" Expecting appID, consentID!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("getConsent(Appid:"+ args[0]+ "ConsentID:"+ args[1]+") : calling method -")
-	appID := args[0]
+	appID     := args[0]
 	consentID := args[1]
+	logger.Debug("getConsent(Appid=" + appID + ", ConsentID=" + consentID +") : calling method -")
+
 	valAsBytes, err := stub.GetState(consentID) //get the consent from chaincode state
 	if err != nil {
 		logger.Error("Failed to get consent: " + consentID +" "+err.Error())
@@ -252,9 +255,9 @@ func (c *ConsentCC)inactivateConsent(stub shim.ChaincodeStubInterface, args []st
 		errStr := errorArgs+" Expecting appID, consentID!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("inactivateConsent(Appid:"+ args[0]+ "ConsentID:"+ args[1]+") : calling method -")
-	appID := args[0]
+	appID     := args[0]
 	consentID := args[1]
+	logger.Debug("inactivateConsent(Appid="+ appID+ ", ConsentID="+ consentID+") : calling method -")
 
 	consentAsBytes, err := stub.GetState(consentID)
 	if err != nil {
@@ -294,8 +297,8 @@ func (c *ConsentCC)deleteConsents4AppID(stub shim.ChaincodeStubInterface, args [
 		errStr := errorArgs+" Expecting appID!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("deleteConsents4AppID(Appid:"+ args[0]+ ") : calling method -")
 	appID := args[0]
+	logger.Debug("deleteConsents4AppID(Appid="+ appID + ") : calling method -")
 	consents, err := getConsentsByIndex(stub, indexApp, []string{appID})
 	if err != nil {
 		errStr := err.Error()
@@ -324,8 +327,8 @@ func (c *ConsentCC)getConsents4AppID(stub shim.ChaincodeStubInterface, args []st
 		errStr := errorArgs+" Expecting appID!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("getConsents4AppID(Appid:"+ args[0]+") : calling method -")
 	appID := args[0]
+	logger.Debug("getConsents4AppID(Appid="+ appID+") : calling method -")
 	consents, err := getConsentsByIndex(stub, indexApp,  []string{appID, ACTIVE})
 	if err != nil {
 		return shim.Error(buildError(errorGetConsents4AppID+appID))
@@ -348,9 +351,9 @@ func (c *ConsentCC)getOwnerConsents(stub shim.ChaincodeStubInterface, args []str
 		errStr := errorArgs+" Expecting appID, ownerID!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("getOwnerConsents(Appid:"+ args[0]+ "OwnerID:"+ args[1]+") : calling method -")
-	appID := args[0]
+	appID   := args[0]
 	ownerID := args[1]
+	logger.Debug("getOwnerConsents(Appid="+ appID+ ", OwnerID="+ownerID+") : calling method -")
 
 	consents, err := getConsentsByIndex(stub, indexOwner,  []string{appID, ownerID, ACTIVE})
 	if err != nil {
@@ -371,16 +374,44 @@ func (c *ConsentCC)getOwnerConsents(stub shim.ChaincodeStubInterface, args []str
 // =====================================================================================================================
 func (c *ConsentCC)getConsumerConsents(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	if len(args) != 2 {
-		errStr := errorArgs+" Expecting appID, ownerID!"
+		errStr := errorArgs+" Expecting appID, consumerID!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("getConsumerConsents(Appid:"+ args[0]+ "ConsumerID:"+ args[1]+") : calling method -")
-	appID := args[0]
+	appID      := args[0]
 	consumerID := args[1]
-
+	logger.Debug("getConsumerConsents(Appid="+ appID+ ", ConsumerID="+ consumerID+") : calling method -")
 	consents, err := getConsentsByIndex(stub, indexConsumer,  []string{appID, consumerID, ACTIVE})
 	if err != nil {
 		return shim.Error(buildError(errorGetConsents4Consumer+consumerID+" appID:"+appID))
+	}
+	valAsBytes, err := json.Marshal(consents)
+	if err != nil {
+		return shim.Success([]byte("[]"))
+	}
+	return shim.Success(valAsBytes)
+}
+
+// =====================================================================================================================
+// Get a Consent for an appID,a consumerID and a ownerID
+// example:
+// ./peer chaincode invoke -C mch -n consent -c '{"Args":["getconsumerownerconsents","APPID","CONSUMERID", "OWNERID"]}'
+// 						-o 127.0.0.1:7050
+// =====================================================================================================================
+func (c *ConsentCC)getConsumerOwnerConsents(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 3 {
+		errStr := errorArgs+" Expecting appID, consumerID, ownerID!"
+		return shim.Error(buildError(errStr))
+	}
+	appID      := args[0]
+	consumerID := args[1]
+	ownerID    := args[2]
+	logger.Debug("getConsumerConsents(Appid="+ appID+ ", ConsumerID="+ consumerID+ ", OwnerID="+ ownerID+") : calling method -")
+	fmt.Println(("getConsumerConsents(Appid="+ appID+ ", ConsumerID="+ consumerID+ ", OwnerID="+ ownerID+") : calling method -"))
+
+
+	consents, err := getConsentsByIndex(stub, indexConsumerOwner,  []string{appID, consumerID, ownerID, ACTIVE})
+	if err != nil {
+		return shim.Error(buildError(errorGetConsents4ConsumerOwner +"consumerID" + consumerID+" ownerID:"+ownerID+" appID:"+appID))
 	}
 	valAsBytes, err := json.Marshal(consents)
 	if err != nil {
@@ -400,8 +431,8 @@ func (c *ConsentCC)isConsent(stub shim.ChaincodeStubInterface, args []string) pb
 		errStr := errorArgs+" Expecting AppID, OwnerID, CounsumerID, Datatype, Dataaccess!"
 		return shim.Error(buildError(errStr))
 	}
-	logger.Debug("isConsent(Appid:"+ args[0]+ "Ownerid:"+ args[1]+" Consumerid:"+ args[2]+ " Datatype:"+ args[3]+
-		" Dataaccess:" + args[4] +") : calling method -")
+	logger.Debug("isConsent(Appid="+ args[0]+ ", Ownerid="+ args[1]+", Consumerid="+ args[2]+ ", Datatype="+ args[3]+
+		", Dataaccess=" + args[4] +") : calling method -")
 
 	appID := args[0]
 	ownerID := args[1]
@@ -427,7 +458,7 @@ func (c *ConsentCC)isConsent(stub shim.ChaincodeStubInterface, args []string) pb
 // createIndex - Create all index for a consent
 // =====================================================================================================================
 func createIndex(stub shim.ChaincodeStubInterface, consent consent) error {
-	logger.Debug("createIndex() for consentID:"+ consent.ConsentID+" : calling method -")
+	logger.Debug("createIndex(consentID="+ consent.ConsentID+") : calling method -")
 	AppIndex, err := stub.CreateCompositeKey(indexApp, []string{consent.AppID, consent.State, consent.ConsentID})
 	if err != nil {
 		logger.Error(err.Error())
@@ -451,6 +482,14 @@ func createIndex(stub shim.ChaincodeStubInterface, consent consent) error {
 	}
 	stub.PutState(ConsumerIndex, []byte{0x00})
 
+	ConsumerOwnerIndex, err := stub.CreateCompositeKey(indexConsumerOwner, []string{consent.AppID, consent.ConsumerID,
+		consent.OwnerID, consent.State, consent.ConsentID})
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	stub.PutState(ConsumerOwnerIndex, []byte{0x00})
+
 	IsConsentIndex, err := stub.CreateCompositeKey(indexIsConsent, []string{consent.AppID, consent.OwnerID,
 		consent.ConsumerID, consent.State, consent.DataType, consent.DataAccess, consent.ConsentID})
 	if err != nil {
@@ -465,7 +504,7 @@ func createIndex(stub shim.ChaincodeStubInterface, consent consent) error {
 // deleteIndex - delete all index for a consent
 // =====================================================================================================================
 func deleteIndex(stub shim.ChaincodeStubInterface, consent consent) error {
-	logger.Debug("deleteIndex() for consentID:"+ consent.ConsentID+" : calling method -")
+	logger.Debug("deleteIndex(consentID="+ consent.ConsentID+") : calling method -")
 	AppIndex, err := stub.CreateCompositeKey(indexApp, []string{consent.AppID, consent.ConsentID})
 	if err != nil {
 		logger.Error(err.Error())
@@ -503,7 +542,7 @@ func deleteIndex(stub shim.ChaincodeStubInterface, consent consent) error {
 // deleteConsent - delete a consent
 // =====================================================================================================================
 func deleteConsent(stub shim.ChaincodeStubInterface, consentID string) error {
-	logger.Debug("deleteConsent(ConsentID:"+ consentID+ ") : calling method -")
+	logger.Debug("deleteConsent(ConsentID="+ consentID+ ") : calling method -")
 	valAsBytes, err := stub.GetState(consentID)
 	if err != nil {
 		errStr := "Failed to get consent:" + consentID
@@ -541,7 +580,7 @@ func deleteConsent(stub shim.ChaincodeStubInterface, consentID string) error {
 // use index to retrieve a list of consents
 // =====================================================================================================================
 func getConsentsByIndex(stub shim.ChaincodeStubInterface, index string, keys []string) ([]consent, error) {
-	logger.Debug("getConsentsByIndex() : calling method -")
+	logger.Debug("getConsentsByIndex(index="+ index +") : calling method -")
 	resultsIterator, err := stub.GetStateByPartialCompositeKey(index, keys)
 	if err != nil {
 		logger.Error(err)
@@ -590,7 +629,7 @@ func buildError(errorStr string) (jsonResp string){
 // Check if the consent have a valid date for today
 // =====================================================================================================================
 func isValidToday(dt_start, dt_end time.Time) bool {
-	logger.Debug("isValidToday(dt_start:"+dt_start.String()+", dt_end:"+dt_end.String()+") : calling method -")
+	logger.Debug("isValidToday(dt_start="+dt_start.String()+", dt_end="+dt_end.String()+") : calling method -")
 	now := time.Now()
 	dt_end = dt_end.Add(24 * time.Hour)
 	isValid := now.After(dt_start) && now.Before(dt_end)
@@ -614,7 +653,7 @@ func dateString2Date(datestr string) (time.Time, error) {
 // Check if the period is valid (begin anterior to end)
 // =====================================================================================================================
 func checkDates(start, end string) ( dt_start , dt_end time.Time,  err error) {
-	logger.Debug("CheckPeriod(start:"+start+", end:"+end+") : calling method -")
+	logger.Debug("CheckPeriod(start="+start+", end="+end+") : calling method -")
 
 	dt_start, err = dateString2Date(start)
 	if err != nil {
@@ -652,3 +691,4 @@ func main() {
 		fmt.Printf("Error starting Smart contract Consent V2: %s", err)
 	}
 }
+

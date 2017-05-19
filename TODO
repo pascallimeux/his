@@ -8,24 +8,51 @@ X faire des tests avec plusieurs containers (pour comprendre le fonctionnement d
 X verifier le fonctionnement des logs entre sdk et his avec fichier et niveau
 X mettre des logs pour chaque appel de fonction et chaque erreur
 X retour d'erreur des API
+X ajouter une fonction ownerconsumer au smartcontract  + tests
+X ajouter une api pour his (ownerconsumer) + tests
+X voir le paramétage pour configurer le numéro IP pour le sdk-go
+X faire un makefile cf celui du sdk, (depends, tests unitaires, integration, docker image avec parametrage des ips, update sdk avec govendor etc..
+X mettre les APIs en https
 
+
+- analyser block et transaction
+- verifier les objets (string) renvoyés par les api de type query
+- ajouter un swagger
+- ajouter les APIs : deploySC, addPeer, addOrderer, createChannel
+- creer manuellement un nouveau peer
+- creer un nouveau SC et le module associé
+- creer un nouveau channel
 - refactorer le code
 - refactorer le paramétrage
 - refactorer les APIs
 - refactoriser le code (majuscule, methode publique etc.)
 
-- creer un fichier .tx pour créer un nouveau channel
+
+faire les slides:
+    construire un peer
+    construire un orderer
+    construire un ca
+    parametrer ca/orderer/peer
+    construire le reseau docker
+    générer le fichier channel.tx
+
+- corriger le makefile
 - tester les get sur client et sur chain et prevoir api pour deploiement de peer etc...
 - faire les classes de tests associées aux handler et aux helpers et verifier le contenu des tests
 - faire les tests postman et tests de monte en charge et monté en charge multi thread
+- verifier la cohérence et l'utilité des test unitaires et d'intégration
 
-- analyser block et transaction
-- verifier les objets (string) renvoyés par les api de type query
+- configurer postman pour le https
+- resoudre le problème des log dans un chaincode
 - les api query qui ne fonctionnent pas
-- mettre les APIs en https
+- A quoi serts le provider name ?
 
 
 
-voir le paramétage pour configurer le numéro IP pour le sdk-go
+go get github.com/yvasiyarov/swagger
+$GOPATH/bin/swagger -apiPackage="github.com/pascallimeux/his" -mainApiFile="github.com/pascallimeux/his/his.go"
+
+
+
 
 

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"encoding/json"
 	"strings"
+	"github.com/op/go-logging"
+	"os"
 )
 const (
 	APPID1 = "APP4TESTS1"
@@ -20,6 +22,28 @@ const (
 	DATAACCESS1 = "access1"
 	DATAACCESS2 = "access2"
 )
+
+func  InitLogger()  {
+	logLevel     := logging.INFO
+	//consLogLevel := logging.DEBUG
+	f            := os.Stderr
+	//loggerModule := ""
+	var format    = logging.MustStringFormatter(
+		`%{color}%{time:15:04:05.000} [%{module}:%{shortfile}] %{level:.4s} : %{color:reset} %{message}`,
+	)
+	backend := logging.NewLogBackend(f, "", 0)
+	backendFormatter := logging.NewBackendFormatter(backend, format)
+	backendLeveled := logging.AddModuleLevel(backendFormatter)
+	backendLeveled.SetLevel(logging.Level(logLevel), "mock")
+
+	//backendConsent := logging.NewLogBackend(f, "", 0)
+	//backendConsFormatter := logging.NewBackendFormatter(backendConsent, format)
+	//backendConsLeveled := logging.AddModuleLevel(backendConsFormatter)
+	//backendConsLeveled.SetLevel(consLogLevel,LOGGERMODULE)
+	//logging.SetBackend(backendLeveled, backendConsLeveled)
+	logging.SetBackend(backendLeveled)
+}
+
 
 // =====================================================================================================================
 // Get version of smart contract (nominal case)
@@ -254,6 +278,34 @@ func TestConsentV2_GetConsumerConsentsNominal(t *testing.T) {
 	}
 }
 
+// =====================================================================================================================
+// Get list of all consents for a consumer and a owner (nominal case)
+// =====================================================================================================================
+func TestConsentV2_GetConsumerOwnerConsentsNominal(t *testing.T) {
+	scc := new(ConsentCC)
+	stub := shim.NewMockStub("consentv2", scc)
+	stub.MockInvoke("1", [][]byte{[]byte("postconsent"), []byte(APPID1), []byte(OWNERID1), []byte(CONSUMERID1), []byte(DATATYPE1), []byte(DATAACCESS1), []byte(getStringDateNow(0)), []byte(getStringDateNow(7))})
+	stub.MockInvoke("2", [][]byte{[]byte("postconsent"), []byte(APPID1), []byte(OWNERID2), []byte(CONSUMERID1), []byte(DATATYPE1), []byte(DATAACCESS1), []byte(getStringDateNow(0)), []byte(getStringDateNow(7))})
+	stub.MockInvoke("3", [][]byte{[]byte("postconsent"), []byte(APPID1), []byte(OWNERID1), []byte(CONSUMERID1), []byte(DATATYPE2), []byte(DATAACCESS1), []byte(getStringDateNow(0)), []byte(getStringDateNow(7))})
+	stub.MockInvoke("4", [][]byte{[]byte("postconsent"), []byte(APPID1), []byte(OWNERID1), []byte(CONSUMERID2), []byte(DATATYPE1), []byte(DATAACCESS1), []byte(getStringDateNow(0)), []byte(getStringDateNow(7))})
+
+	res := stub.MockInvoke("5", [][]byte{[]byte("getconsumerownerconsents"), []byte(APPID1), []byte(CONSUMERID1), []byte(OWNERID1)})
+	if res.Status != shim.OK {
+		t.Log("bad status received, expected: 200 received:"+strconv.FormatInt(int64(res.Status), 10))
+		t.Log("response: "+ string(res.Message))
+		t.FailNow()
+	}
+	consents := make([]consent, 0)
+	err := json.Unmarshal(res.Payload, &consents)
+	if err != nil {
+		t.Log("getconsent", string(res.Payload))
+		t.FailNow()
+	}
+	if len(consents) != 2{
+		t.Error("2 expected, but ",strconv.Itoa(len(consents)), "reveived")
+		t.FailNow()
+	}
+}
 // =====================================================================================================================
 // Is consent exist (nominal case)
 // =====================================================================================================================
@@ -1027,4 +1079,10 @@ func TestConsentV2_IsConsentWithFuturePeriod(t *testing.T) {
 func getStringDateNow(nbdaysafter time.Duration) string{
 	t := time.Now().Add(nbdaysafter * 24 * time.Hour)
 	return t.Format("2006-01-02")
+}
+
+func TestMain(m *testing.M) {
+	InitLogger()
+	code := m.Run()
+	os.Exit(code)
 }

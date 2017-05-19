@@ -75,7 +75,7 @@ func setup() {
 	}
 
 	// Deploy the smartcontract
-	netHelper.DeployCC(configuration.ChainCodePath, configuration.ChainCodeVersion, configuration.ChainCodeID)
+	netHelper.DeployCC(ChainCode{ChainCodePath: configuration.ChainCodePath,ChainCodeVersion: configuration.ChainCodeVersion, ChainCodeID: configuration.ChainCodeID})
 }
 
 func shutdown(){

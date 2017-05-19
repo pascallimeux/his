@@ -39,7 +39,10 @@ func main() {
 	}
 
 	// Deploy the consent smartcontract if is not deployed
-	networkHelper.DeployCC(configuration.ChainCodePath, configuration.ChainCodeVersion, configuration.ChainCodeID)
+	networkHelper.DeployCC(helpers.ChainCode{
+		ChainCodePath: configuration.ChainCodePath,
+		ChainCodeVersion: configuration.ChainCodeVersion,
+		ChainCodeID: configuration.ChainCodeID})
 
 	// Init applications context
 	ocmsContext := ocms.OCMSContext{
@@ -70,7 +73,14 @@ func main() {
 		ReadTimeout:  configuration.ReadTimeout * time.Nanosecond,
 		WriteTimeout: configuration.WriteTimeout * time.Nanosecond,
 	}
-	log.Fatal(s.ListenAndServe().Error())
+	if configuration.Tls {
+		log.Debug("Start https Server")
+		log.Fatal(s.ListenAndServeTLS("server.crt", "server.key"))
+	}else{
+		log.Debug("Start http Server")
+		log.Fatal(s.ListenAndServe().Error())
+	}
+
 
 	defer configuration.CloseLogger()
 

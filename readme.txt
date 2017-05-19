@@ -42,7 +42,7 @@
     rm /opt/gopath/src/github.com/hyperledger/fabric-sdk-go/test/fixtures/fabricca/tlsOrg1/fabric-ca-server.db
 
 
-*** Create HIS docker image ***
+*** Create HIS docker image ***g
     go build his.go
     docker build -t his .
 
@@ -63,3 +63,25 @@
 
 *** Delete HIS image ***
     docker rmi his
+
+
+
+    go get github.com/yvasiyarov/swagger
+    go get github.com/pkg/errors
+    go get github.com/google/certificate-transparency-go/client
+    go get github.com/google/certificate-transparency-go/x509
+    go get google.golang.org/grpc
+    go get github.com/spf13/viper
+    go get github.com/gorilla/context
+    go get golang.org/x/crypto/sha3
+    go get github.com/miekg/pkcs11
+    go get github.com/fsouza/go-dockerclient
+
+
+
+    $GOPATH/bin/swagger -apiPackage="github.com/pascallimeux/his/api" -mainApiFile="github.com/pascallimeux/his/his.go"
+
+
+    openssl genrsa -out server.key 2048
+    openssl ecparam -genkey -name secp384r1 -out server.key
+    openssl req -new -x509 -sha256 -key server.key -days 3650 -subj "/C=FR/ST=France/L=Grenoble/O=Orange/OU=OLS/CN=orange-labs.fr" -out server.crt

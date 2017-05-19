@@ -57,7 +57,7 @@ func setup() {
 		log.Fatal(err)
 	}
 
-	networkHelper.DeployCC(configuration.ChainCodePath, configuration.ChainCodeVersion, configuration.ChainCodeID)
+	networkHelper.DeployCC(helpers.ChainCode{ChainCodePath: configuration.ChainCodePath,ChainCodeVersion: configuration.ChainCodeVersion, ChainCodeID: configuration.ChainCodeID})
 
 	// Init applications context
 	ocmsContext := ocms.OCMSContext{

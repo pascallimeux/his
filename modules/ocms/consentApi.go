@@ -22,7 +22,8 @@ type IsConsent struct {
 func (a *OCMSContext) getVersion(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getVersion() : calling method -")
 	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
-	err := utils.InitHelper(r, consentHelper)
+	//err := utils.InitHelper(r, consentHelper)
+	err := consentHelper.Init(utils.UserCredentials{UserName:"admin", Password:"admpw"})
 	if err != nil {
 		log.Error(err)
 		utils.SendError(w, badRequest)
@@ -72,6 +73,8 @@ func (a *OCMSContext) processConsent(w http.ResponseWriter, r *http.Request) {
 		bytes, err = a.getConsents4Owner(consentHelper, a.ChainCodeID, consent.AppID, consent.OwnerID)
 	case "list4consumer":
 		bytes, err = a.getConsents4Consumer(consentHelper, a.ChainCodeID, consent.AppID, consent.ConsumerID)
+	case "list4consumerowner":
+		bytes, err = a.getConsents4ConsumerOwner(consentHelper, a.ChainCodeID, consent.AppID, consent.ConsumerID, consent.OwnerID)
 	case "isconsent":
 		bytes, err = a.isConsent(consentHelper, a.ChainCodeID, consent)
 	default:
@@ -159,6 +162,16 @@ func (a *OCMSContext) getConsents4Owner(consentHelper *ConsentHelper, chainCodeI
 	message := fmt.Sprintf("getConsents4Owner(applicationID=%s, ownerID=%s) : calling method -", applicationID, ownerID)
 	log.Info(message)
 	consents, err := consentHelper.GetOwnerConsents(chainCodeID, applicationID, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	return consents2Bytes(consents)
+}
+
+func (a *OCMSContext) getConsents4ConsumerOwner(consentHelper *ConsentHelper, chainCodeID, applicationID, consumerID string, ownerID string) ([]byte, error) {
+	message := fmt.Sprintf("getConsents4ConsumerOwner(applicationID=%s, consumerID=%s, ownerID=%s) : calling method -", applicationID, consumerID, ownerID)
+	log.Info(message)
+	consents, err := consentHelper.GetConsumerOwnerConsents(chainCodeID, applicationID, consumerID, ownerID)
 	if err != nil {
 		return nil, err
 	}

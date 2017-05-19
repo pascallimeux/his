@@ -61,6 +61,14 @@ func TestRevokeUserAPINominal(t *testing.T) {
 	}
 }
 
+func TestDeployCCAPINominal(t *testing.T) {
+	chaincode := helpers.ChainCode{ChainCodePath: "github.com/consentv2",ChainCodeVersion: "v0", ChainCodeID: "consentoftests"}
+	err := sendDeployCC(chaincode)
+	if err != nil {
+		t.Error(err.Error())
+	}
+}
+
 func sendRevokeUser(userCredentials utils.UserCredentials) error {
 	data, _ := json.Marshal(userCredentials)
 	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+REVOKE, string(data), ADMINNAME, ADMINPWD)
@@ -96,20 +104,41 @@ func sendEnrollUser(userCredentials utils.UserCredentials) error {
 func sendRegister(registerUser helpers.UserRegistrer) (string, error) {
 	var response EnrollmentSecret
 	data, _ := json.Marshal(registerUser)
-	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+REGISTER, string(data), ADMINNAME, ADMINPWD)
-	if err1 != nil {
-		return "", err1
+	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+REGISTER, string(data), ADMINNAME, ADMINPWD)
+	if err != nil {
+		return "", err
 	}
-	status, body_bytes, err2 := executeRequest(request)
-	if err2 != nil {
-		return "", err2
+	status, body_bytes, err := executeRequest(request)
+	if err != nil {
+		return "", err
 	}
-	err3 := json.Unmarshal(body_bytes, &response)
-	if err3 != nil {
-		return "", err3
+	err = json.Unmarshal(body_bytes, &response)
+	if err != nil {
+		return "", err
 	}
 	if status != http.StatusOK {
 		return "", errors.New("bad status")
 	}
 	return response.Secret, nil
+}
+
+func sendDeployCC(chaincode helpers.ChainCode) error {
+	var response EnrollmentSecret
+	data, _ := json.Marshal(chaincode)
+	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+DEPLOYCC, string(data), ADMINNAME, ADMINPWD)
+	if err != nil {
+		return err
+	}
+	status, body_bytes, err := executeRequest(request)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body_bytes, &response)
+	if err != nil {
+		return  err
+	}
+	if status != http.StatusOK {
+		return errors.New("bad status")
+	}
+	return nil
 }

@@ -5,19 +5,43 @@ import (
 	"time"
 	"strings"
 	sdkConfig "github.com/hyperledger/fabric-sdk-go/config"
+	"github.com/golang/protobuf/proto"
+	cb "github.com/hyperledger/fabric/protos/common"
+	//hppeer "github.com/hyperledger/fabric/protos/peer"
+	protosutils "github.com/hyperledger/fabric/protos/utils"
+	//"fmt"
+	"encoding/json"
+	//"github.com/hyperledger/fabric/protos/orderer"
 )
 
 func TestPeerconfig(t *testing.T) {
 	peersConfig, _ := sdkConfig.GetPeersConfig()
-	t.Log("***************************************nb peers:", len(peersConfig))
-	for _,peer := range peersConfig {
-		t.Log("Host: ", peer.Host)
-		t.Log("Port: ", peer.Port)
-		t.Log("EventHost: ", peer.EventHost)
-		t.Log("EventPort: ", peer.EventPort)
-		t.Log("Primary: ", peer.Primary)
-	}
+	tt, _ := json.MarshalIndent(peersConfig, "", "  ")
+	t.Log(string(tt))
+}
 
+
+func TestGetPeers(t *testing.T) {
+	peers := netHelper.GetPeers()
+	for _, peer := range peers {
+		t.Log("peer: name=",peer.GetName(), " url=", peer.GetURL(), "\n")
+	}
+}
+
+func TestGetOrderer(t *testing.T) {
+	orderers := netHelper.GetOrderers()
+	for _, orderer := range orderers {
+		t.Log("orderer: url=", orderer.GetURL(), "\n")
+	}
+}
+
+func TestMSPManager(t *testing.T) {
+	mspmanager := netHelper.Chain.GetMSPManager()
+	mspManagers, _ := mspmanager.GetMSPs()
+	t.Log("nb msp: ", len(mspManagers))
+	for _, msp := range mspManagers {
+		t.Log(msp.GetIntermediateCerts())
+	}
 }
 
 func TestChain(t *testing.T) {
@@ -61,11 +85,10 @@ func TestQueryInfos(t *testing.T) {
 func TestQueryTransaction(t *testing.T) {
 	txID := createTransaction(t)
 	time.Sleep(time.Millisecond * 1500)
-	processedTransaction, err :=netHelper.QueryTransaction(txID)
+	_, err :=netHelper.QueryTransaction(txID)
 	if err != nil {
 		t.Error("QueryTransaction return error: ", err)
 	}
-	t.Log("transaction: ", processedTransaction.TransactionEnvelope.Payload)
 }
 
 func TestQueryBlockByNumber(t *testing.T) {
@@ -74,9 +97,17 @@ func TestQueryBlockByNumber(t *testing.T) {
 		t.Error("QueryBlockByNumber return error: ", err)
 	}
 	//dis,_ := json.Marshal(block)
-	//t.Log("block: ", dis)
+	t.Log("block header hash: ", block.Header.DataHash)
 	t.Log("block data : ", block.Data.Data)
 	t.Log("block metadata : ", block.Metadata.Metadata)
+	data := &cb.BlockData{}
+	if err = proto.Unmarshal(block.Data.Data[0], data); err != nil {
+		t.Error("QueryBlockByNumber return error: ", err)
+	}
+	id, _ :=protosutils.GetChainIDFromBlock(block)
+
+	t.Log("ID:", id)
+	t.Log("dataStr: ",data.String())
 }
 
 func TestQueryBlockByHash(t *testing.T) {
@@ -124,8 +155,6 @@ func TestQueryByChainCode(t *testing.T) {
 		t.Log("InstantiatedCC: ",chaincode,"\n")
 	}
 }
-
-
 
 func createTransaction(t *testing.T)string{
 	txID, err := consHelper.CreateConsent(configuration.ChainCodeID, APPID1, OWNERID1, CONSUMERID1, DATATYPE1, DATAACCESS1, getStringDateNow(0), getStringDateNow(7))

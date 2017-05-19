@@ -25,6 +25,12 @@ type NetworkHelper struct {
 	Initialized	bool
 }
 
+type ChainCode struct {
+	ChainCodePath		string	 `json:"ccpath"`
+	ChainCodeVersion	string	 `json:"ccversion"`
+	ChainCodeID		string	 `json:"ccid"`
+}
+
 func (nh *NetworkHelper) Init(userCredentials utils.UserCredentials) error{
 	log.Debug("Init() : calling method -")
 	chain, err := utils.GetChain(userCredentials, nh.StatStorePath, nh.ChainID)
@@ -92,13 +98,13 @@ func (nh *NetworkHelper) StartNetwork(userCredentials utils.UserCredentials, pro
 }
 
 
-func (nh *NetworkHelper) DeployCC(chainCodePath, chainCodeVersion, chainCodeID string) error {
-	log.Debug("DeployCC(chainCodePath:"+ chainCodePath+" chainCodeVersion:" + chainCodeVersion +" chainCodeID:"+ chainCodeID+") : calling method -")
-	if err := nh.InstallCC(chainCodePath, chainCodeVersion, chainCodeID, nil); err != nil {
+func (nh *NetworkHelper) DeployCC(chaincode ChainCode) error {
+	log.Debug("DeployCC(chainCodePath:"+ chaincode.ChainCodePath+" chainCodeVersion:" + chaincode.ChainCodeVersion +" chainCodeID:"+ chaincode.ChainCodeID+") : calling method -")
+	if err := nh.InstallCC(chaincode.ChainCodePath, chaincode.ChainCodeVersion, chaincode.ChainCodeID, nil); err != nil {
 		return err
 	}
 	var args []string
-	return nh.InstantiateCC(chainCodePath, chainCodeVersion, chainCodeID, args)
+	return nh.InstantiateCC(chaincode.ChainCodePath, chaincode.ChainCodeVersion, chaincode.ChainCodeID, args)
 }
 
 func (nh *NetworkHelper) InstallCC(chainCodePath, chainCodeVersion, chainCodeID string, chaincodePackage []byte) error {
@@ -171,4 +177,8 @@ func (nh *NetworkHelper) QueryByChainCode(chaincodeName string)([][]byte, error)
 func (nh *NetworkHelper) GetPeers()([]fabricClient.Peer){
 	log.Debug("GetPeers() : calling method -")
 	return nh.Chain.GetPeers()
+}
+func (nh *NetworkHelper) GetOrderers()([]fabricClient.Orderer){
+	log.Debug("GetOrderers() : calling method -")
+	return nh.Chain.GetOrderers()
 }

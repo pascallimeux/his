@@ -10,6 +10,7 @@ logFileName = "/var/log/his/his.log"
 httpHostPort = 8000
 readTimeout  = 5000000000 # in nanoseconds
 writeTimeout = 10000000000 # in nanoseconds
+tls          = false
 
 [chaincode]
 chainCodePath     = "github.com/consentv2"

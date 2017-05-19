@@ -23,7 +23,7 @@ func (a *AppContext) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
-	err = helpers.InitHelper(r, userHelper)
+	err = utils.InitHelper(r, userHelper)
 	if err != nil {
 		log.Error(err)
 		utils.SendError(w, badRequest)
@@ -53,7 +53,7 @@ func (a *AppContext) enrollUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
-	err = helpers.InitHelper(r, userHelper)
+	err = utils.InitHelper(r, userHelper)
 	if err != nil {
 		log.Error(err)
 		utils.SendError(w, badRequest)
@@ -65,7 +65,7 @@ func (a *AppContext) enrollUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, badRequest)
 		return
 	}
-	content := []byte("")
+	content := []byte(`{"Content":"User enrolled"}`)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(content)
@@ -82,7 +82,7 @@ func (a *AppContext) revokeUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
-	err = helpers.InitHelper(r, userHelper)
+	err = utils.InitHelper(r, userHelper)
 	if err != nil {
 		log.Error(err)
 		utils.SendError(w, badRequest)
@@ -94,8 +94,69 @@ func (a *AppContext) revokeUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, badRequest)
 		return
 	}
-	content := []byte("")
+	content := []byte(`{"Content":"User revoked"}`)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(content)
+}
+
+//HTTP Post - /his/v0/admin/deploycc
+func (a *AppContext) deployCC(w http.ResponseWriter, r *http.Request) {
+	log.Debug("deployCC() : calling method -")
+	var chaincode helpers.ChainCode
+	err := json.NewDecoder(r.Body).Decode(&chaincode)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, badRequest)
+		return
+	}
+	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	err = utils.InitHelper(r, netHelper)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, badRequest)
+		return
+	}
+	err = netHelper.DeployCC(chaincode)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, badRequest)
+		return
+	}
+	content := []byte(`{"Content":"Chaincode deployed"}`)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(content)
+}
+
+//HTTP Post - /his/v0/admin/orderer
+func (a *AppContext) addOrderer(w http.ResponseWriter, r *http.Request) {
+	log.Debug("addOrderer() : calling method -")
+	//TODO
+}
+
+
+//HTTP Post - /his/v0/admin/peer
+func (a *AppContext) addPeer(w http.ResponseWriter, r *http.Request) {
+	log.Debug("addPeer() : calling method -")
+	//TODO
+}
+
+//HTTP Post - /his/v0/admin/channel
+func (a *AppContext) createChannel(w http.ResponseWriter, r *http.Request) {
+	log.Debug("createChannel() : calling method -")
+	//TODO
+}
+
+//HTTP Post - /his/v0/admin/orderer/delete
+func (a *AppContext) removeOrderer(w http.ResponseWriter, r *http.Request) {
+	log.Debug("removeOrderer() : calling method -")
+	//TODO
+}
+
+
+//HTTP Post - /his/v0/admin/peer/remove
+func (a *AppContext) removePeer(w http.ResponseWriter, r *http.Request) {
+	log.Debug("removePeer() : calling method -")
+	//TODO
 }

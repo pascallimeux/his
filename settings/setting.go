@@ -20,6 +20,7 @@ type Settings struct {
 	LogFile		   *os.File
 	ReadTimeout        time.Duration
 	WriteTimeout       time.Duration
+	Tls                bool
 
 	ChainCodePath      string
 	ChainCodeVersion   string
@@ -110,6 +111,7 @@ func GetSettings(configPath, configFileName string) (Settings, error) {
 		}
 		configuration.ReadTimeout = viper.GetDuration("server.readTimeout")
 		configuration.WriteTimeout = viper.GetDuration("server.writeTimeout")
+		configuration.Tls = viper.GetBool("server.tls")
 
 		configuration.ChainCodePath = viper.GetString("chaincode.chainCodePath")
 		configuration.ChainCodeVersion = viper.GetString("chaincode.chainCodeVersion")
