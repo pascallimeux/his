@@ -9,7 +9,7 @@ mode = "info"
 httpHostPort = 8000
 readTimeout  = 5000000000 # in nanoseconds
 writeTimeout = 10000000000 # in nanoseconds
-tls          = true
+tls          = false
 
 [chaincode]
 chainCodePath     = "github.com/consentv2"
@@ -25,5 +25,6 @@ networkConfigFile = "/opt/gopath/src/github.com/pascallimeux/his/fixtures/config
 channelConfigFile = "/opt/gopath/src/github.com/pascallimeux/his/fixtures/channel/testchannel.tx"
 
 [admin]
+authMode          = "false"
 adminUsername     = "admin"
 adminPwd          = "adminpw"

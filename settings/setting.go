@@ -31,6 +31,7 @@ type Settings struct {
 	StatstorePath      string
 	NetworkConfigfile  string
 	ChannelConfigFile  string
+	AuthMode	   bool
 	Adminusername	   string
 	AdminPwd           string
 
@@ -41,6 +42,16 @@ var log = logging.MustGetLogger("his.settings")
 func (s *Settings) ToString() string {
 	st :=     "Logger          --> file:" + s.LogFileName + " in " + s.LogMode + " mode \n"
 	st = st + "Server          --> url :" + s.HttpHostUrl
+	protocol := "http"
+	if s.Tls{
+		protocol = "https"
+	}
+	authentication := "None active"
+	if s.AuthMode{
+		authentication = "Active"
+	}
+	st = st + "Protocol        --> mode :" + protocol
+	st = st + "Authentication  --> mode :" + authentication
 	return st
 }
 
@@ -124,10 +135,12 @@ func GetSettings(configPath, configFileName string) (Settings, error) {
 		configuration.NetworkConfigfile = viper.GetString("path.networkConfigFile")
 		configuration.ChannelConfigFile = viper.GetString("path.channelConfigFile")
 
+
+		configuration.AuthMode = viper.GetBool("admin.authMode")
 		configuration.Adminusername = viper.GetString("admin.adminUsername")
 		configuration.AdminPwd = viper.GetString("admin.adminPwd")
 
-		fmt.Println("Application configuration: \n" + configuration.ToString())
+		log.Info("Application configuration: \n" + configuration.ToString())
 		return configuration, nil
 	}
 }

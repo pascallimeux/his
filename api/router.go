@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"github.com/op/go-logging"
 	"github.com/pascallimeux/his/modules/ocms"
+	utils "github.com/pascallimeux/his/modules/utils"
 )
 
 var log = logging.MustGetLogger("his.api")
@@ -38,6 +39,8 @@ type AppContext struct {
 	ChainID         string
 	Repo            string
 	StatStorePath   string
+	Authent         bool
+	AdmCrendentials  utils.UserCredentials
 }
 
 func (a *AppContext) CreateHISRoutes(router *mux.Router) {

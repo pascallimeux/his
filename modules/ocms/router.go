@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"github.com/op/go-logging"
+	utils "github.com/pascallimeux/his/modules/utils"
 )
 
 var log = logging.MustGetLogger("his.ocms")
@@ -21,6 +22,8 @@ type OCMSContext struct {
 	ChainID         string
 	Repo            string
 	StatStorePath   string
+	Authent         bool
+	AdmCrendentials  utils.UserCredentials
 }
 
 func (oc *OCMSContext) CreateOCMSRoutes(router *mux.Router) {

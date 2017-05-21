@@ -64,24 +64,51 @@
 *** Delete HIS image ***
     docker rmi his
 
-
-
-    go get github.com/yvasiyarov/swagger
-    go get github.com/pkg/errors
-    go get github.com/google/certificate-transparency-go/client
-    go get github.com/google/certificate-transparency-go/x509
-    go get google.golang.org/grpc
-    go get github.com/spf13/viper
-    go get github.com/gorilla/context
-    go get golang.org/x/crypto/sha3
-    go get github.com/miekg/pkcs11
-    go get github.com/fsouza/go-dockerclient
-
-
-
-    $GOPATH/bin/swagger -apiPackage="github.com/pascallimeux/his/api" -mainApiFile="github.com/pascallimeux/his/his.go"
-
-
+Create server certificates
     openssl genrsa -out server.key 2048
     openssl ecparam -genkey -name secp384r1 -out server.key
     openssl req -new -x509 -sha256 -key server.key -days 3650 -subj "/C=FR/ST=France/L=Grenoble/O=Orange/OU=OLS/CN=orange-labs.fr" -out server.crt
+
+
+---------------------------------------------------------------------------------------------
+Use swagger
+link:  https://github.com/go-swagger/go-swagger/tree/master/fixtures/goparsing/petstore
+
+Installation:
+    go get -u github.com/go-swagger/go-swagger/cmd/swagger
+    cd ../cmg/swagger
+    go install swagger.go
+    go get github.com/go-openapi/runtime
+    go get github.com/tylerb/graceful
+    go get github.com/jessevdk/go-flags
+    go get golang.org/x/net/context
+
+Add annotation in API
+    in main.go: add //go:generate swagger generate spec
+    in handlers: add annotions
+
+Generate swagger.yml and swagger.json
+    in ../github.com/pascallimeux/his
+    swagger init spec \
+      --title "H.I.S application" \
+      --description "Hyperledger Interface Server" \
+      --version 1.0.0 \
+      --scheme http
+    swagger generate spec -o ./swagger.json -i ./swagger.yml
+    swagger validate ./swagger.json
+
+update golang libs
+    cd ../his
+    go get -u -f ./...
+
+Generate server and test it
+    swagger generate server -f ./swagger.json
+    cd ./cmd/his-server && go run main.go
+
+Remove swagger
+    cd his
+    rm swagger* && sudo rm -R cmd && sudo rm -R restapi
+---------------------------------------------------------------------------------------------
+
+
+

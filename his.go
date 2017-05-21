@@ -14,6 +14,7 @@ import(
 
 var log = logging.MustGetLogger("his")
 
+//go:generate swagger generate spec
 func main() {
 	// Init settings
 	configuration, err := settings.GetSettings(".", "his")
@@ -50,6 +51,8 @@ func main() {
 		Repo:                   configuration.Repo,
 		StatStorePath:          configuration.StatstorePath,
 		ChainID:         	configuration.ChainID,
+		Authent:                configuration.AuthMode,
+		AdmCrendentials:        adminCredentials,
 	}
 
 	appContext := api.AppContext{
@@ -58,6 +61,8 @@ func main() {
 		Repo:                   configuration.Repo,
 		StatStorePath:          configuration.StatstorePath,
 		ChainID:         	configuration.ChainID,
+		Authent:                configuration.AuthMode,
+		AdmCrendentials:        adminCredentials,
 	}
 
 	// Init routes for application

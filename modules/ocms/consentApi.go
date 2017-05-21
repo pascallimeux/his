@@ -8,28 +8,36 @@ import (
 	"errors"
 	utils "github.com/pascallimeux/his/modules/utils"
 )
-var badRequest =errors.New("Bad request")
+var badRequest = errors.New("Bad request")
 
-type Version struct {
-	Version string
+// version response
+// swagger:response versionResponse
+type VersionResponse struct {
+	Version string `json:"version"`
 }
 
 type IsConsent struct {
 	Consent string
 }
 
-//HTTP Get - /his/v0/api/version
+// getVersion swagger:route GET /ocms/v3/api/version orders getVersion
+//
+// Gets the version of the chaincode consent.
+//
+// Responses:
+//    default: genericError
+//        200: versionResponse
 func (a *OCMSContext) getVersion(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getVersion() : calling method -")
 	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
-	//err := utils.InitHelper(r, consentHelper)
-	err := consentHelper.Init(utils.UserCredentials{UserName:"admin", Password:"admpw"})
+	var err error
+	err = utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
 		utils.SendError(w, badRequest)
 		return
 	}
-	version := Version{}
+	version := VersionResponse{}
 	version.Version, err = consentHelper.GetVersion(a.ChainCodeID)
 	if err != nil {
 		log.Error(err)
@@ -54,7 +62,7 @@ func (a *OCMSContext) processConsent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
-	err = utils.InitHelper(r, consentHelper)
+	err = utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
 		utils.SendError(w, badRequest)

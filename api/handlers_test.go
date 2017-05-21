@@ -65,6 +65,8 @@ func setup() {
 		Repo:                   configuration.Repo,
 		StatStorePath:          configuration.StatstorePath,
 		ChainID:         	configuration.ChainID,
+		Authent:                configuration.AuthMode,
+		AdmCrendentials:        adminCredentials,
 	}
 
 	appContext := AppContext{
@@ -73,6 +75,8 @@ func setup() {
 		Repo:                   configuration.Repo,
 		StatStorePath:          configuration.StatstorePath,
 		ChainID:         	configuration.ChainID,
+		Authent:                configuration.AuthMode,
+		AdmCrendentials:        adminCredentials,
 	}
 	// Init routes for application
 	router := mux.NewRouter().StrictSlash(false)

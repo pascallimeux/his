@@ -47,12 +47,35 @@ faire les slides:
 - les api query qui ne fonctionnent pas
 - A quoi serts le provider name ?
 
+----------------------------------------------------------------------------------------
+go get -u github.com/go-swagger/go-swagger/cmd/swagger
+cd ../cmg/swagger
+go install swagger.go
+
+go get github.com/go-openapi/runtime
+go get github.com/tylerb/graceful
+go get github.com/jessevdk/go-flags
+go get golang.org/x/net/context
 
 
-go get github.com/yvasiyarov/swagger
-$GOPATH/bin/swagger -apiPackage="github.com/pascallimeux/his" -mainApiFile="github.com/pascallimeux/his/his.go"
+cd his
+swagger generate spec -o ./swagger.json
+
+swagger validate https://raw.githubusercontent.com/swagger-api/swagger-spec/master/examples/v2.0/json/petstore-expanded.json
+swagger generate server [-f ./swagger.json] -A [application-name [--principal [principal-name]]
+swagger generate client [-f ./swagger.json] -A [application-name [--principal [principal-name]]
+
+swagger generate server -A AuthSample -P models.Principal -f ./swagger.yml
 
 
+swagger init spec \
+  --title "H.I.S application" \
+  --description "Hyperledger Interface Server" \
+  --version 1.0.0 \
+  --scheme http \
+  --consumes /his/v0/dashboard/+json \
+  --produces /his/v0/dashboard/+json
 
+swagger validate ./swagger.yml
 
-
+swagger generate server -A TodoList -f ./swagger.yml
