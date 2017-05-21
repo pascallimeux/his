@@ -19,21 +19,21 @@ func (a *AppContext) registerUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
 	err = utils.InitHelper(r, userHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	enrollmentSecret := EnrollmentSecret{}
 	enrollmentSecret.Secret, err = userHelper.RegisterUser(user)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorUserCredentials, -1)
 	}
 	content, _ := json.Marshal(enrollmentSecret)
 	w.Header().Set("Content-Type", "application/json")
@@ -49,20 +49,20 @@ func (a *AppContext) enrollUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
 	err = utils.InitHelper(r, userHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	err = userHelper.EnrollUser(credentials)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
 	content := []byte(`{"Content":"User enrolled"}`)
@@ -78,20 +78,20 @@ func (a *AppContext) revokeUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
 	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
 	err = utils.InitHelper(r, userHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	err = userHelper.RevokeUser(credentials)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
 	content := []byte(`{"Content":"User revoked"}`)
@@ -107,20 +107,20 @@ func (a *AppContext) deployCC(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&chaincode)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
 	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	err = netHelper.DeployCC(chaincode)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorDeployCC, -1)
 		return
 	}
 	content := []byte(`{"Content":"Chaincode deployed"}`)

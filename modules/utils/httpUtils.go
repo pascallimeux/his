@@ -8,6 +8,14 @@ import (
 	"encoding/json"
 )
 
+var ErrorBadArgsRequest  = errors.New("Bad arguments request")
+var ErrorUserCredentials = errors.New("User credentials error")
+var ErrorInializeHelper  = errors.New("Initialze helper error")
+var ErrorDeployCC        = errors.New("Chaincode deploy error")
+var ErrorHyperledger     = errors.New("Hyperledger error")
+var ErrorChainCode       = errors.New("ChainCode error")
+var ErrorMarshalStruct   = errors.New("return structure error")
+
 var log = logging.MustGetLogger("his.utils")
 
 type UserCredentials struct {
@@ -38,10 +46,21 @@ func SendErrorOld(w http.ResponseWriter, err error) {
 	w.Write([]byte(message))
 }
 
+func SendStruct(str interface{}, w http.ResponseWriter) {
+	log.Debug("SendStruct() : calling method -")
+	bytes, err := json.Marshal(str)
+	if err != nil {
+		log.Error(err)
+		SendError(w, ErrorMarshalStruct, -1)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(bytes)
+}
 
-func SendError(w http.ResponseWriter, err error) {
+func SendError(w http.ResponseWriter, err error, code int) {
 	log.Debug("sendError() : calling method -")
-	code := -1
 	genericError := &GenericError{
 			Code: code,
 			Message: err,

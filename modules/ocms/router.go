@@ -4,7 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"github.com/op/go-logging"
-	utils "github.com/pascallimeux/his/modules/utils"
+	"github.com/pascallimeux/his/modules/utils"
 )
 
 var log = logging.MustGetLogger("his.ocms")
@@ -12,7 +12,12 @@ var log = logging.MustGetLogger("his.ocms")
 
 const (
 	VERSIONURI       = "/ocms/v3/api/version"
-	CONSENTAPI       = "/ocms/v3/api/consent"
+	CONSENT          = "/ocms/v3/api/consent"
+	CONSENTS         = "/ocms/v3/api/consents"
+	ISCONSENT        = "/ocms/v3/api/isconsent"
+	CONSENTSOWNER    = "/ocms/v3/api/ownerconsents"
+	CONSENTSCONSUMER = "/ocms/v3/api/consumerconsents"
+	CONSENTSCONSOWN  = "/ocms/v3/api/consumerownerconsents"
 )
 
 
@@ -29,5 +34,12 @@ type OCMSContext struct {
 func (oc *OCMSContext) CreateOCMSRoutes(router *mux.Router) {
 	log.Debug("CreateOCMSRoutes() : calling method -")
 	router.HandleFunc(VERSIONURI, oc.getVersion).Methods("GET")
-	router.HandleFunc(CONSENTAPI, oc.processConsent).Methods("POST")
+	router.HandleFunc(CONSENT, oc.createConsent).Methods("POST")
+	router.HandleFunc(CONSENT+"/{appid, consentid}", oc.getConsent).Methods("GET")
+	router.HandleFunc(CONSENT+"/{appid, consentid}", oc.deleteConsent).Methods("DELETE")
+	router.HandleFunc(CONSENTS+"/{appid}", oc.listConsents).Methods("GET")
+	router.HandleFunc(ISCONSENT, oc.isConsent).Methods("POST")
+	router.HandleFunc(CONSENTSOWNER+"/{appid, ownerid}", oc.getConsents4Owner).Methods("GET")
+	router.HandleFunc(CONSENTSCONSUMER+"/{appid, consumerid}", oc.getConsents4Consumer).Methods("GET")
+	router.HandleFunc(CONSENTSCONSOWN+"/{appid, consumerid, ownerid}", oc.getConsents4ConsumerOwner).Methods("GET")
 }

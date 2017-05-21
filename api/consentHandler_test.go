@@ -84,7 +84,7 @@ func TestGetConsents4ConsumerOwnerFromAPINominal(t *testing.T) {
 	createConsent(ocms.Consent{OwnerID: ownerid, ConsumerID: consumerid})
 	createConsent(ocms.Consent{OwnerID: "2222", ConsumerID: consumerid})
 	createConsent(ocms.Consent{OwnerID: ownerid, ConsumerID: "2222"})
-	consents, err := getListOfConsents("", consumerid)
+	consents, err := getListOfConsents(ownerid, consumerid)
 	if err != nil {
 		t.Error(err)
 	}
@@ -96,20 +96,19 @@ func TestGetConsents4ConsumerOwnerFromAPINominal(t *testing.T) {
 
 func createConsent(consent ocms.Consent) (string, error) {
 	var responseConsent ocms.Consent
-	consent.Action = "create"
 	consent.AppID = APPID
 	data, _ := json.Marshal(consent)
-	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
-	if err1 != nil {
-		return "", err1
+	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENT, string(data), ADMINNAME, ADMINPWD)
+	if err != nil {
+		return "", err
 	}
-	status, body_bytes, err2 := executeRequest(request)
-	if err2 != nil {
-		return "", err2
+	status, body_bytes, err := executeRequest(request)
+	if err != nil {
+		return "", err
 	}
-	err3 := json.Unmarshal(body_bytes, &responseConsent)
-	if err3 != nil {
-		return "", err3
+	err = json.Unmarshal(body_bytes, &responseConsent)
+	if err != nil {
+		return "", err
 	}
 
 	if status != http.StatusOK {
@@ -119,10 +118,8 @@ func createConsent(consent ocms.Consent) (string, error) {
 }
 
 func getConsent(consentID string) (ocms.Consent, error) {
-	consent := ocms.Consent{Action: "get", AppID: APPID, ConsentID: consentID}
 	responseConsent := ocms.Consent{}
-	data, _ := json.Marshal(consent)
-	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
+	request, err1 := buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENT+"/"+APPID+","+consentID, "", ADMINNAME, ADMINPWD)
 	if err1 != nil {
 		return responseConsent, err1
 	}
@@ -141,27 +138,26 @@ func getConsent(consentID string) (ocms.Consent, error) {
 }
 
 func getListOfConsents(ownerID, consumerID string) ([]ocms.Consent, error) {
-	consent := ocms.Consent{Action: "list", AppID: APPID}
 	consents := []ocms.Consent{}
-	if ownerID != "" {
-		consent.OwnerID = ownerID
-		consent.Action = "list4owner"
+	var request *http.Request
+	var err error
+	if ownerID != ""&& consumerID !="" {
+		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENTSCONSOWN+"/"+APPID+","+consumerID+","+ownerID, "", ADMINNAME, ADMINPWD)
 	} else if consumerID != "" {
-		consent.ConsumerID = consumerID
-		consent.Action = "list4consumer"
+		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENTSCONSUMER+"/"+APPID+","+consumerID, "", ADMINNAME, ADMINPWD)
+	} else if ownerID !=""{
+		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENTSOWNER+"/"+APPID+","+ownerID, "", ADMINNAME, ADMINPWD)
 	}
-	data, _ := json.Marshal(consent)
-	request, err1 := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENTAPI, string(data), ADMINNAME, ADMINPWD)
-	if err1 != nil {
-		return consents, err1
+	if err != nil {
+		return consents, err
 	}
-	status, body_bytes, err2 := executeRequest(request)
-	if err2 != nil {
-		return consents, err2
+	status, body_bytes, err := executeRequest(request)
+	if err != nil {
+		return consents, err
 	}
-	err3 := json.Unmarshal(body_bytes, &consents)
-	if err3 != nil {
-		return consents, err3
+	err = json.Unmarshal(body_bytes, &consents)
+	if err != nil {
+		return consents, err
 	}
 	if status != http.StatusOK {
 		return consents, errors.New("bad status")

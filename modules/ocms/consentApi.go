@@ -6,9 +6,9 @@ import (
 	"time"
 	"fmt"
 	"errors"
-	utils "github.com/pascallimeux/his/modules/utils"
+	"github.com/pascallimeux/his/modules/utils"
+	"github.com/gorilla/mux"
 )
-var badRequest = errors.New("Bad request")
 
 // version response
 // swagger:response versionResponse
@@ -16,8 +16,12 @@ type VersionResponse struct {
 	Version string `json:"version"`
 }
 
-type IsConsent struct {
-	Consent string
+type IsConsentResponse struct {
+	Consent string `json:"isconsent"`
+}
+
+type ConsentStatusResponse struct {
+	Status string `json:"consentstatus"`
 }
 
 // getVersion swagger:route GET /ocms/v3/api/version orders getVersion
@@ -34,191 +38,225 @@ func (a *OCMSContext) getVersion(w http.ResponseWriter, r *http.Request) {
 	err = utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	version := VersionResponse{}
 	version.Version, err = consentHelper.GetVersion(a.ChainCodeID)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorChainCode, -1)
 	}
-	content, _ := json.Marshal(version)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(content)
+	utils.SendStruct(version, w)
 }
 
 //HTTP Post - /his/v0/api/consent
-func (a *OCMSContext) processConsent(w http.ResponseWriter, r *http.Request) {
-	log.Debug("processConsent() : calling method -")
-
-	var bytes []byte
+func (a *OCMSContext) createConsent(w http.ResponseWriter, r *http.Request) {
+	log.Debug("createConsent() : calling method -")
 	var consent Consent
 	err := json.NewDecoder(r.Body).Decode(&consent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
 	err = utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
-	switch action := consent.Action; action {
-	case "create":
-		bytes, err = a.createConsent(consentHelper, a.ChainCodeID, consent)
-	case "list":
-		bytes, err = a.listConsents(consentHelper, a.ChainCodeID, consent.AppID)
-	case "get":
-		bytes, err = a.getConsent(consentHelper, a.ChainCodeID, consent.AppID, consent.ConsentID)
-	case "remove":
-		bytes, err = a.unactivateConsent(consentHelper, a.ChainCodeID, consent.AppID, consent.ConsentID)
-	case "list4owner":
-		bytes, err = a.getConsents4Owner(consentHelper, a.ChainCodeID, consent.AppID, consent.OwnerID)
-	case "list4consumer":
-		bytes, err = a.getConsents4Consumer(consentHelper, a.ChainCodeID, consent.AppID, consent.ConsumerID)
-	case "list4consumerowner":
-		bytes, err = a.getConsents4ConsumerOwner(consentHelper, a.ChainCodeID, consent.AppID, consent.ConsumerID, consent.OwnerID)
-	case "isconsent":
-		bytes, err = a.isConsent(consentHelper, a.ChainCodeID, consent)
-	default:
-		log.Error("bad action request: ", action)
-		utils.SendError(w, errors.New("Bad action request"))
-		return
-	}
+	err = check_args(&consent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorBadArgsRequest, -1)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(bytes)
-}
-
-
-func (a *OCMSContext) createConsent(consentHelper *ConsentHelper, chainCodeID string, consent Consent) ([]byte, error) {
-	log.Debug("createConsent(applicationID:"+ consent.AppID+") : calling method -")
-	err := check_args(&consent)
-	var message string
+	consentID, err := consentHelper.CreateConsent(a.ChainCodeID, consent.AppID, consent.OwnerID, consent.ConsumerID, consent.DataType, consent.DataAccess, consent.Dt_begin, consent.Dt_end)
 	if err != nil {
-		message = fmt.Sprintf("createConsent(%s) : calling method -", err.Error())
-	} else {
-		message = fmt.Sprintf("createConsent(%s) : calling method -", consent.Print())
-	}
-	log.Info(message)
-	if err != nil {
-		return nil, err
-	}
-	consentID, err := consentHelper.CreateConsent(chainCodeID, consent.AppID, consent.OwnerID, consent.ConsumerID, consent.DataType, consent.DataAccess, consent.Dt_begin, consent.Dt_end)
-	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
 	}
 	consent.ConsentID = consentID
-	return consent2Bytes(consent)
+	utils.SendStruct(consent, w)
 }
 
-func (a *OCMSContext) listConsents(consentHelper *ConsentHelper, chainCodeID, applicationID string) ([]byte, error) {
-	message := fmt.Sprintf("listConsents(applicationID=%s) : calling method -", applicationID)
-	log.Info(message)
-	consents, err := consentHelper.GetConsents(chainCodeID, applicationID)
+//HTTP Get - /his/v0/api/consents/{appid}
+func (a *OCMSContext) listConsents(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	appid := vars["appid"]
+	message := fmt.Sprintf("listConsents(appid=%s) : calling method -", appid)
+	log.Debug(message)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err := utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
+		return
 	}
-	return consents2Bytes(consents)
+	consents, err := consentHelper.GetConsents(a.ChainCodeID, appid)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
+	}
+	utils.SendStruct(consents, w)
 }
 
-func (a *OCMSContext) getConsent(consentHelper *ConsentHelper, chainCodeID, applicationID, consentID string) ([]byte, error) {
-	message := fmt.Sprintf("getConsent(applicationID=%s, consentID=%s) : calling method -", applicationID, consentID)
-	log.Info(message)
-	consent, err := consentHelper.GetConsent(chainCodeID, applicationID, consentID)
+//HTTP Get - /his/v0/api/consent/{appid, consentid}
+func (a *OCMSContext) getConsent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	appid := vars["appid"]
+	consentid := vars["consentid"]
+	message := fmt.Sprintf("getConsent(appid=%s, consentid=%s) : calling method -", appid, consentid)
+	log.Debug(message)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err := utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
+		return
 	}
-	return consent2Bytes(consent)
+	consent, err := consentHelper.GetConsent(a.ChainCodeID, appid, consentid)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
+	}
+	utils.SendStruct(consent, w)
 }
 
-func (a *OCMSContext) unactivateConsent(consentHelper *ConsentHelper, chainCodeID, applicationID, consentID string) ([]byte, error) {
-	message := fmt.Sprintf("unactivateConsent(applicationID=%s, consentID=%s) : calling method -", applicationID, consentID)
-	log.Info(message)
-	_, err := consentHelper.RemoveConsent(chainCodeID, applicationID, consentID)
+
+//HTTP Delete - /his/v0/api/consent/{appid, consentid}
+func (a *OCMSContext) deleteConsent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	appid := vars["appid"]
+	consentid := vars["consentid"]
+	message := fmt.Sprintf("deleteConsent(appid=%s, consentid=%s) : calling method -", appid, consentid)
+	log.Debug(message)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err := utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
+		return
 	}
-	consent, err := consentHelper.GetConsent(chainCodeID, applicationID, consentID)
+	_, err = consentHelper.RemoveConsent(a.ChainCodeID, appid, consentid)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
 	}
-	return consent2Bytes(consent)
+	response := ConsentStatusResponse{}
+	response.Status = "Inactivated"
+	utils.SendStruct(response, w)
 }
 
-func (a *OCMSContext) getConsents4Consumer(consentHelper *ConsentHelper, chainCodeID, applicationID, consumerID string) ([]byte, error) {
-	message := fmt.Sprintf("getConsents4Consumer(applicationID=%s, consumerID=%s) : calling method -", applicationID, consumerID)
-	log.Info(message)
-	consents, err := consentHelper.GetConsumerConsents(chainCodeID, applicationID, consumerID)
+//HTTP Post - /his/v0/api/isconsent
+func (a *OCMSContext) isConsent(w http.ResponseWriter, r *http.Request) {
+	log.Debug("isConsent() : calling method -")
+	var consent Consent
+	err := json.NewDecoder(r.Body).Decode(&consent)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorBadArgsRequest, -1)
+		return
 	}
-	return consents2Bytes(consents)
-}
-
-func (a *OCMSContext) getConsents4Owner(consentHelper *ConsentHelper, chainCodeID, applicationID, ownerID string) ([]byte, error) {
-	message := fmt.Sprintf("getConsents4Owner(applicationID=%s, ownerID=%s) : calling method -", applicationID, ownerID)
-	log.Info(message)
-	consents, err := consentHelper.GetOwnerConsents(chainCodeID, applicationID, ownerID)
-	if err != nil {
-		return nil, err
-	}
-	return consents2Bytes(consents)
-}
-
-func (a *OCMSContext) getConsents4ConsumerOwner(consentHelper *ConsentHelper, chainCodeID, applicationID, consumerID string, ownerID string) ([]byte, error) {
-	message := fmt.Sprintf("getConsents4ConsumerOwner(applicationID=%s, consumerID=%s, ownerID=%s) : calling method -", applicationID, consumerID, ownerID)
-	log.Info(message)
-	consents, err := consentHelper.GetConsumerOwnerConsents(chainCodeID, applicationID, consumerID, ownerID)
-	if err != nil {
-		return nil, err
-	}
-	return consents2Bytes(consents)
-}
-
-func (a *OCMSContext) isConsent(consentHelper *ConsentHelper, chainCodeID string, consent Consent) ([]byte, error) {
 	message := fmt.Sprintf("isConsent(consent=%s) : calling method -", consent.Print())
 	log.Info(message)
-	isconsent, err := consentHelper.IsConsentExist(chainCodeID, consent.AppID, consent.OwnerID, consent.ConsumerID, consent.DataType, consent.DataAccess)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err = utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
+		return
 	}
-	response := IsConsent{}
+	isconsent, err := consentHelper.IsConsentExist(a.ChainCodeID, consent.AppID, consent.OwnerID, consent.ConsumerID, consent.DataType, consent.DataAccess)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
+	}
+	response := IsConsentResponse{}
 	if isconsent {
 		response.Consent = "True"
 	} else {
 		response.Consent = "False"
 	}
-	content, _ := json.Marshal(response)
-	return content, nil
+	utils.SendStruct(response, w)
 }
 
-func consents2Bytes(consents []Consent) ([]byte, error) {
-	log.Debug("consents2Bytes() : calling method -")
-	j, err := json.Marshal(consents)
+//HTTP Get - /his/v0/api/consent/owner/{appid, ownerid}
+func (a *OCMSContext) getConsents4Owner(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	appid := vars["appid"]
+	ownerid := vars["ownerid"]
+	message := fmt.Sprintf("getConsents4Owner(appid=%s, ownerid=%s) : calling method -", appid, ownerid)
+	log.Debug(message)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err := utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
+		return
 	}
-	return j, nil
+	consents, err := consentHelper.GetOwnerConsents(a.ChainCodeID, appid, ownerid)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
+	}
+	utils.SendStruct(consents, w)
 }
 
-func consent2Bytes(consent Consent) ([]byte, error) {
-	log.Debug("consent2Bytes() : calling method -")
-	j, err := json.Marshal(consent)
+//HTTP Get - /his/v0/api/consent/consumer/{appid, consumerid}
+func (a *OCMSContext) getConsents4Consumer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	appid := vars["appid"]
+	consumerid := vars["consumerid"]
+	message := fmt.Sprintf("getConsents4Consumer(appid=%s, consumerid=%s) : calling method -", appid, consumerid)
+	log.Debug(message)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err := utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
+		return
 	}
-	return j, nil
+	consents, err := consentHelper.GetConsumerConsents(a.ChainCodeID, appid, consumerid)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
+	}
+	utils.SendStruct(consents, w)
+}
+
+
+//HTTP Get - /his/v0/api/consent/consumerowner/{appid, consumerid, ownerid}
+func (a *OCMSContext) getConsents4ConsumerOwner(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	appid := vars["appid"]
+	consumerid := vars["consumerid"]
+	ownerid := vars["ownerid"]
+	message := fmt.Sprintf("getConsents4ConsumerOwner(appid=%s, consumerid=%s, ownerid=%s) : calling method -", appid, consumerid, ownerid)
+	log.Debug(message)
+	consentHelper := &ConsentHelper{ChainID:a.ChainID, StatStorePath:a.StatStorePath}
+	err := utils.InitHelper(r, consentHelper, a.AdmCrendentials, a.Authent)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
+		return
+	}
+	consents, err := consentHelper.GetConsumerOwnerConsents(a.ChainCodeID, appid, consumerid, ownerid)
+	if err != nil {
+		log.Error(err)
+		utils.SendError(w, utils.ErrorChainCode, -1)
+		return
+	}
+	utils.SendStruct(consents, w)
 }
 
 func check_args(consent *Consent) error {

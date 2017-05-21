@@ -18,7 +18,6 @@ type ConsentHelper struct {
 }
 
 type Consent struct {
-	Action		string     `json:"action"`
 	AppID 		string     `json:"appid"`
 	State       	string     `json:"state"`
 	ConsentID      	string     `json:"consentid"`

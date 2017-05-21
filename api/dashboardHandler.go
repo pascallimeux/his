@@ -6,10 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pascallimeux/his/helpers"
 	"github.com/pascallimeux/his/modules/utils"
-	"github.com/pkg/errors"
 )
-
-var badRequest =errors.New("Bad request")
 
 //HTTP Get - /his/v0/dashboard/chain
 func (a *AppContext) blockchainInfo(w http.ResponseWriter, r *http.Request) {
@@ -19,18 +16,18 @@ func (a *AppContext) blockchainInfo(w http.ResponseWriter, r *http.Request) {
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	blockchainInfo, err := netHelper.QueryInfos()
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 	}
 	content, err := json.Marshal(blockchainInfo)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -46,18 +43,18 @@ func (a *AppContext) getChannels(w http.ResponseWriter, r *http.Request) {
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	channels, err := netHelper.QueryChannels()
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 	}
 	content, err := json.Marshal(channels)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -73,14 +70,14 @@ func (a *AppContext) getPeers(w http.ResponseWriter, r *http.Request) {
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	peers :=netHelper.GetPeers()
 	content, err := json.Marshal(peers)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -96,14 +93,14 @@ func (a *AppContext) getOrderers(w http.ResponseWriter, r *http.Request) {
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	orderers :=netHelper.GetOrderers()
 	content, err := json.Marshal(orderers)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -119,18 +116,18 @@ func (a *AppContext) getInstalledCC(w http.ResponseWriter, r *http.Request) {
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	cc, err := netHelper.GetInstalledChainCode()
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 	}
 	content, err := json.Marshal(cc)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -146,18 +143,18 @@ func (a *AppContext) getInstantiatedCC(w http.ResponseWriter, r *http.Request) {
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	cc, err := netHelper.GetInstanciateChainCode()
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 	}
 	content, err := json.Marshal(cc)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -175,19 +172,19 @@ func (a *AppContext) transactionDetails(w http.ResponseWriter, r *http.Request) 
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	transaction, err := netHelper.QueryTransaction(tr_uuid)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	content, err := json.Marshal(transaction)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -206,19 +203,19 @@ func (a *AppContext) blockByNumber(w http.ResponseWriter, r *http.Request) {
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	block, err := netHelper.QueryBlockByNumber(blocNb)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	content, err := json.Marshal(block)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -237,19 +234,19 @@ func (a *AppContext) blockByHash(w http.ResponseWriter, r *http.Request) {
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	block, err := netHelper.QueryBlockByHash(blockHash)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	content, err := json.Marshal(block)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -268,19 +265,19 @@ func (a *AppContext) queryByCC(w http.ResponseWriter, r *http.Request) {
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorInializeHelper, -1)
 		return
 	}
 	response, err := netHelper.QueryByChainCode(chaincodeName)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	content, err := json.Marshal(response)
 	if err != nil {
 		log.Error(err)
-		utils.SendError(w, badRequest)
+		utils.SendError(w, utils.ErrorHyperledger, -1)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
