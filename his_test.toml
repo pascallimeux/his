@@ -2,7 +2,7 @@
 version = "2.0.0 (2017-05-09)"
 
 [logger]
-mode = "info"
+mode = "error"
 
 [server]
 #httpHostIp = "10.194.18.46"
@@ -12,9 +12,9 @@ writeTimeout = 10000000000 # in nanoseconds
 tls          = false
 
 [chaincode]
-chainCodePath     = "github.com/consentv2"
+chainCodePath     = "github.com/consentv3"
 chainCodeVersion  = "v0"
-chainCodeID       = "consentv2test"
+chainCodeID       = "consentv3test"
 chainID           = "testchannel"
 providerName      = "SW"
 

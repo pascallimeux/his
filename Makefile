@@ -69,6 +69,7 @@ all: integration-test
 .PHONY: depend
 depend:
 	go get -u github.com/kardianos/govendor && go get github.com/gorilla/mux && go get github.com/op/go-logging
+	cd $GOPATH/src/github.com/hyperledger/ && git clone https://gerrit.hyperledger.org/r/fabric-sdk-go
 
 .PHONY: vendor
 vendor:
@@ -96,8 +97,7 @@ clean-hp:
 	echo "Clean Hyperledger test environment."
 	sh ./scripts/cleanHP.sh
 
-.PHONY: image
-image:
+image-build:
 	echo "Build HIS docker image."
 	cp ./fixtures/config/config.yaml ./fixtures/config/config_prod.yaml
 	sudo sed -i "s/IPPEER0/$(IPPEER0)/g"  ./fixtures/config/config_prod.yaml
@@ -138,3 +138,23 @@ test:
 	echo "Start HIS intregration tests."
 	cd $(GOPATH)/src/github.com/pascallimeux/his/api && go test -v
 	cd $(GOPATH)/src/github.com/pascallimeux/his/helpers && go test -v
+
+swagger-init:
+	swagger init spec \
+      --title "his" \
+      --description "Hyperledger Interface Server" \
+      --version 1.0.0 \
+      --scheme http
+	swagger generate spec -o ./swagger.json -i ./swagger.yml
+	go get -u -f ./...
+	swagger generate server -f ./swagger.json
+
+swagger-build:
+	swagger generate spec -o ./swagger.json -i ./swagger.yml
+	swagger generate server -f ./swagger.json
+
+swagger-clean:
+	rm swagger.json && sudo rm -R cmd && sudo rm -R restapi
+
+swagger-start:
+	swagger serve --port=3000 --host=127.0.0.1 swagger.json --base-path=/swagger-ui

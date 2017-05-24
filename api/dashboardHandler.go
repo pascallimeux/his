@@ -12,7 +12,7 @@ import (
 func (a *AppContext) blockchainInfo(w http.ResponseWriter, r *http.Request) {
 	log.Debug("blockchainInfo() : calling method -")
 	var err error
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -39,7 +39,7 @@ func (a *AppContext) blockchainInfo(w http.ResponseWriter, r *http.Request) {
 func (a *AppContext) getChannels(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getChannels() : calling method -")
 	var err error
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -66,7 +66,7 @@ func (a *AppContext) getChannels(w http.ResponseWriter, r *http.Request) {
 func (a *AppContext) getPeers(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getPeers() : calling method -")
 	var err error
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -89,7 +89,7 @@ func (a *AppContext) getPeers(w http.ResponseWriter, r *http.Request) {
 func (a *AppContext) getOrderers(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getOrderers() : calling method -")
 	var err error
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -112,7 +112,7 @@ func (a *AppContext) getOrderers(w http.ResponseWriter, r *http.Request) {
 func (a *AppContext) getInstalledCC(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getInstalledCC() : calling method -")
 	var err error
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -139,7 +139,7 @@ func (a *AppContext) getInstalledCC(w http.ResponseWriter, r *http.Request) {
 func (a *AppContext) getInstantiatedCC(w http.ResponseWriter, r *http.Request) {
 	log.Debug("getInstantiatedCC() : calling method -")
 	var err error
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -168,7 +168,7 @@ func (a *AppContext) transactionDetails(w http.ResponseWriter, r *http.Request) 
 	tr_uuid := vars["truuid"]
 	message := fmt.Sprintf("transactionDetails(tr_uuid=%s) : calling method -", tr_uuid)
 	log.Debug(message)
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -199,7 +199,7 @@ func (a *AppContext) blockByNumber(w http.ResponseWriter, r *http.Request) {
 	message := fmt.Sprintf("blockByNumber(blocknb=%s) : calling method -", blocNb)
 	log.Debug(message)
 
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -230,7 +230,7 @@ func (a *AppContext) blockByHash(w http.ResponseWriter, r *http.Request) {
 	blockHash := vars["blockhash"]
 	message := fmt.Sprintf("blockByHash(blockHash=%s) : calling method -", blockHash)
 	log.Debug(message)
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -261,7 +261,7 @@ func (a *AppContext) queryByCC(w http.ResponseWriter, r *http.Request) {
 	chaincodeName := vars["ccname"]
 	message := fmt.Sprintf("queryByCC(blockHash=%s) : calling method -", chaincodeName)
 	log.Debug(message)
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err := utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)

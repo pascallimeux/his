@@ -45,7 +45,7 @@ import (
 const (
 	// chaincode constants
 	LOGGERMODULE   = "consent"
-	VERSION        = "Orange Consent Application chaincode ver 3 Dated 2017-03-09"
+	VERSION        = "Orange Consent Application chaincode ver 2 Dated 2017-03-09"
 	ACTIVE         = "active"
 	NOT_ACTIVE     = "unactive"
 	AUTHORIZED     = "True"

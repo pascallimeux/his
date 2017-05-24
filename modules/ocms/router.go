@@ -9,17 +9,17 @@ import (
 
 var log = logging.MustGetLogger("his.ocms")
 
-
 const (
-	VERSIONURI       = "/ocms/v3/api/version"
-	CONSENT          = "/ocms/v3/api/consent"
-	CONSENTS         = "/ocms/v3/api/consents"
-	ISCONSENT        = "/ocms/v3/api/isconsent"
-	CONSENTSOWNER    = "/ocms/v3/api/ownerconsents"
-	CONSENTSCONSUMER = "/ocms/v3/api/consumerconsents"
-	CONSENTSCONSOWN  = "/ocms/v3/api/consumerownerconsents"
+	OWNER            = "/owner"
+	CONSUMER         = "/consumer"
+	CONSENTS         = "/consents"
+	ISCONSENT        = "/isconsent"
+	API              = "/ocms/v3/api"
+	APP              = "/app"
+	APIURI           = API+APP+"/{appid}"
+	APICONSENTSURI   = APIURI+CONSENTS
+	VERSIONURI       = API+"/version"
 )
-
 
 type OCMSContext struct {
 	HttpServer     	*http.Server
@@ -33,13 +33,14 @@ type OCMSContext struct {
 
 func (oc *OCMSContext) CreateOCMSRoutes(router *mux.Router) {
 	log.Debug("CreateOCMSRoutes() : calling method -")
-	router.HandleFunc(VERSIONURI, oc.getVersion).Methods("GET")
-	router.HandleFunc(CONSENT, oc.createConsent).Methods("POST")
-	router.HandleFunc(CONSENT+"/{appid, consentid}", oc.getConsent).Methods("GET")
-	router.HandleFunc(CONSENT+"/{appid, consentid}", oc.deleteConsent).Methods("DELETE")
-	router.HandleFunc(CONSENTS+"/{appid}", oc.listConsents).Methods("GET")
-	router.HandleFunc(ISCONSENT, oc.isConsent).Methods("POST")
-	router.HandleFunc(CONSENTSOWNER+"/{appid, ownerid}", oc.getConsents4Owner).Methods("GET")
-	router.HandleFunc(CONSENTSCONSUMER+"/{appid, consumerid}", oc.getConsents4Consumer).Methods("GET")
-	router.HandleFunc(CONSENTSCONSOWN+"/{appid, consumerid, ownerid}", oc.getConsents4ConsumerOwner).Methods("GET")
+	router.HandleFunc(VERSIONURI, oc.GetVersion).Methods("GET")
+	router.HandleFunc(APICONSENTSURI, oc.GetConsents).Methods("GET")
+	router.HandleFunc(APICONSENTSURI, oc.CreateConsent).Methods("POST")
+	router.HandleFunc(APICONSENTSURI, oc.DeleteConsents).Methods("DELETE")
+	router.HandleFunc(APICONSENTSURI+"/{consentid}", oc.GetConsent).Methods("GET")
+	router.HandleFunc(APICONSENTSURI+"/{consentid}", oc.DeleteConsent).Methods("DELETE")
+	router.HandleFunc(APIURI+ISCONSENT, oc.IsConsent).Methods("POST")
+	router.HandleFunc(APIURI+OWNER+   "/{ownerid}"+CONSENTS, oc.GetConsents4Owner).Methods("GET")
+	router.HandleFunc(APIURI+CONSUMER+"/{consumerid}"+CONSENTS, oc.GetConsents4Consumer).Methods("GET")
+	router.HandleFunc(APIURI+CONSUMER+"/{consumerid}"+OWNER+"/{ownerid}"+CONSENTS, oc.GetConsents4ConsumerOwner).Methods("GET")
 }

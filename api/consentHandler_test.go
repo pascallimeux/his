@@ -18,6 +18,7 @@ func TestCreateConsentFromAPINominal(t *testing.T) {
 	if consentID == "" {
 		t.Error("bad consent ID")
 	}
+	log.Debug("consentID=", consentID)
 }
 
 func TestGetConsentDetailFromAPINominal(t *testing.T) {
@@ -46,7 +47,7 @@ func TestGetConsentsFromAPINominal(t *testing.T) {
 		t.Error(err)
 	}
 	for _, consent := range consents {
-		t.Log(consent.Print())
+		t.Log(consent.ToString())
 	}
 }
 
@@ -60,7 +61,7 @@ func TestGetConsents4OwnerFromAPINominal(t *testing.T) {
 		t.Error(err)
 	}
 	for _, consent := range consents {
-		t.Log(consent.Print())
+		t.Log(consent.ToString())
 	}
 }
 
@@ -74,7 +75,7 @@ func TestGetConsents4ConsumerFromAPINominal(t *testing.T) {
 		t.Error(err)
 	}
 	for _, consent := range consents {
-		t.Log(consent.Print())
+		t.Log(consent.ToString())
 	}
 }
 
@@ -89,7 +90,7 @@ func TestGetConsents4ConsumerOwnerFromAPINominal(t *testing.T) {
 		t.Error(err)
 	}
 	for _, consent := range consents {
-		t.Log(consent.Print())
+		t.Log(consent.ToString())
 	}
 }
 
@@ -98,7 +99,7 @@ func createConsent(consent ocms.Consent) (string, error) {
 	var responseConsent ocms.Consent
 	consent.AppID = APPID
 	data, _ := json.Marshal(consent)
-	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.CONSENT, string(data), ADMINNAME, ADMINPWD)
+	request, err := buildRequestWithLoginPassword("POST", httpServerTest.URL+ocms.APICONSENTSURI, string(data), ADMINNAME, ADMINPWD)
 	if err != nil {
 		return "", err
 	}
@@ -119,7 +120,7 @@ func createConsent(consent ocms.Consent) (string, error) {
 
 func getConsent(consentID string) (ocms.Consent, error) {
 	responseConsent := ocms.Consent{}
-	request, err1 := buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENT+"/"+APPID+","+consentID, "", ADMINNAME, ADMINPWD)
+	request, err1 := buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.APICONSENTSURI+"/"+APPID+","+consentID, "", ADMINNAME, ADMINPWD)
 	if err1 != nil {
 		return responseConsent, err1
 	}
@@ -142,11 +143,11 @@ func getListOfConsents(ownerID, consumerID string) ([]ocms.Consent, error) {
 	var request *http.Request
 	var err error
 	if ownerID != ""&& consumerID !="" {
-		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENTSCONSOWN+"/"+APPID+","+consumerID+","+ownerID, "", ADMINNAME, ADMINPWD)
+		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.API+ocms.APP+"/"+APPID+ocms.CONSUMER+"/"+consumerID+ocms.OWNER+"/"+ownerID+ocms.CONSENTS, "", ADMINNAME, ADMINPWD)
 	} else if consumerID != "" {
-		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENTSCONSUMER+"/"+APPID+","+consumerID, "", ADMINNAME, ADMINPWD)
+		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.API+ocms.APP+"/"+APPID+ocms.CONSUMER+"/"+consumerID+ocms.CONSENTS, "", ADMINNAME, ADMINPWD)
 	} else if ownerID !=""{
-		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.CONSENTSOWNER+"/"+APPID+","+ownerID, "", ADMINNAME, ADMINPWD)
+		request, err = buildRequestWithLoginPassword("GET", httpServerTest.URL+ocms.API+ocms.APP+"/"+APPID+ocms.OWNER+"/"+ownerID+ocms.CONSENTS, "", ADMINNAME, ADMINPWD)
 	}
 	if err != nil {
 		return consents, err

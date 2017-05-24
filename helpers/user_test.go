@@ -8,7 +8,7 @@ import (
 func TestRegisterUser(t *testing.T) {
 	username := utils.CreateRandomName()
 	registerUser := UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1"}
-	enrollSecret, err :=userHelper.RegisterUser(registerUser)
+	enrollSecret, err :=userhelper.RegisterUser(registerUser)
 	if err != nil {
 		t.Error(err)
 	}
@@ -20,12 +20,12 @@ func TestRegisterUser(t *testing.T) {
 func TestEnrollUser(t *testing.T) {
 	username := utils.CreateRandomName()
 	registerUser := UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1"}
-	enrollSecret, err :=userHelper.RegisterUser(registerUser)
+	enrollSecret, err :=userhelper.RegisterUser(registerUser)
 	if err != nil {
 		t.Error(err)
 	}
 	userCredentials := utils.UserCredentials{UserName: username, Password: enrollSecret}
-	err = userHelper.EnrollUser(userCredentials)
+	err = userhelper.EnrollUser(userCredentials)
 	if err != nil {
 		t.Error(err)
 	}
@@ -34,16 +34,16 @@ func TestEnrollUser(t *testing.T) {
 func TestRevokeUser(t *testing.T) {
 	username := utils.CreateRandomName()
 	registerUser := UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1"}
-	enrollSecret, err :=userHelper.RegisterUser(registerUser)
+	enrollSecret, err :=userhelper.RegisterUser(registerUser)
 	if err != nil {
 		t.Error(err)
 	}
 	userCredentials := utils.UserCredentials{UserName: username, Password: enrollSecret}
-	err = userHelper.EnrollUser(userCredentials)
+	err = userhelper.EnrollUser(userCredentials)
 	if err != nil {
 		t.Error(err)
 	}
-	err = userHelper.RevokeUser(userCredentials)
+	err = userhelper.RevokeUser(userCredentials)
 	if err != nil {
 		t.Error(err)
 	}
@@ -52,12 +52,12 @@ func TestRevokeUser(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	username := utils.CreateRandomName()
 	registerUser := UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1"}
-	enrollSecret, err :=userHelper.RegisterUser(registerUser)
+	enrollSecret, err :=userhelper.RegisterUser(registerUser)
 	if err != nil {
 		t.Error(err)
 	}
 	userCredentials := utils.UserCredentials{UserName: username, Password: enrollSecret}
-	user, err := userHelper.GetUser(userCredentials)
+	user, err := userhelper.GetUser(userCredentials)
 	if err != nil {
 		t.Error(err)
 	}
@@ -68,7 +68,7 @@ func TestGetUser(t *testing.T) {
 func TestGetClient(t *testing.T) {
 	username := utils.CreateRandomName()
 	registerUser := UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1"}
-	enrollSecret, err :=userHelper.RegisterUser(registerUser)
+	enrollSecret, err :=userhelper.RegisterUser(registerUser)
 	if err != nil {
 		t.Error(err)
 	}
@@ -82,21 +82,21 @@ func TestGetClient(t *testing.T) {
 func __TestReenrollUser(t *testing.T) {
 	username := utils.CreateRandomName()
 	registerUser := UserRegistrer{Name: username, Type: "user", Affiliation: "org1.department1"}
-	enrollSecret, err :=userHelper.RegisterUser(registerUser)
+	enrollSecret, err :=userhelper.RegisterUser(registerUser)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("enrollSecret string: ",enrollSecret)
 	userCredentials := utils.UserCredentials{UserName: username, Password: enrollSecret}
-	err = userHelper.EnrollUser(userCredentials)
+	err = userhelper.EnrollUser(userCredentials)
 	if err != nil {
 		t.Error(err)
 	}
-	err = userHelper.RevokeUser(userCredentials)
+	err = userhelper.RevokeUser(userCredentials)
 	if err != nil {
 		t.Error(err)
 	}
-	err = userHelper.EnrollUser(userCredentials)
+	err = userhelper.EnrollUser(userCredentials)
 	if err != nil {
 		t.Error(err)
 	}

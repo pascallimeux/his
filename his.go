@@ -26,10 +26,8 @@ func main() {
 		Password:configuration.AdminPwd}
 
 	// Init Hyperledger network
-	networkHelper := helpers.NetworkHelper{
-		Repo:                   configuration.Repo,
-		StatStorePath:          configuration.StatstorePath,
-		ChainID:         	configuration.ChainID}
+	networkHelper := helpers.NewNetworkHelper(configuration.Repo, configuration.StatstorePath, configuration.ChainID)
+
 	err = networkHelper.StartNetwork(adminCredentials, configuration.ProviderName, configuration.NetworkConfigfile, configuration.ChannelConfigFile)
 	if err != nil {
 		log.Fatal(err)

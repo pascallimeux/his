@@ -22,7 +22,7 @@ func (a *AppContext) registerUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
-	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
+	userHelper := helpers.NewUserHelper(a.StatStorePath)
 	err = utils.InitHelper(r, userHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -52,7 +52,7 @@ func (a *AppContext) enrollUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
-	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
+	userHelper := helpers.NewUserHelper(a.StatStorePath)
 	err = utils.InitHelper(r, userHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -81,7 +81,7 @@ func (a *AppContext) revokeUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
-	userHelper := &helpers.UserHelper{StatStorePath:a.StatStorePath}
+	userHelper := helpers.NewUserHelper(a.StatStorePath)
 	err = utils.InitHelper(r, userHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)
@@ -110,7 +110,7 @@ func (a *AppContext) deployCC(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, utils.ErrorUserCredentials, -1)
 		return
 	}
-	netHelper := &helpers.NetworkHelper{Repo: a.Repo, StatStorePath: a.StatStorePath, ChainID: a.ChainID}
+	netHelper := helpers.NewNetworkHelper(a.Repo, a.StatStorePath, a.ChainID)
 	err = utils.InitHelper(r, netHelper, a.AdmCrendentials, a.Authent)
 	if err != nil {
 		log.Error(err)

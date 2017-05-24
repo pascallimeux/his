@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 )
 
-type ConsentHelper struct {
+type consentHelper struct {
 	ChainID         string
 	StatStorePath   string
 	Chain 	        fabricClient.Chain
@@ -17,20 +17,13 @@ type ConsentHelper struct {
 	Initialized	bool
 }
 
-type Consent struct {
-	AppID 		string     `json:"appid"`
-	State       	string     `json:"state"`
-	ConsentID      	string     `json:"consentid"`
-	OwnerID       	string     `json:"ownerid"`
-	ConsumerID      string     `json:"consumerid"`
-	DataType      	string     `json:"datatype"`
-	DataAccess      string     `json:"dataaccess"`
-	Dt_begin      	string     `json:"dtbegin"`
-	Dt_end       	string     `json:"dtend"`
+
+func NewConsentHelper(chainID, statStorePath string) ConsentHelper {
+	c := &consentHelper{ChainID: chainID, StatStorePath: statStorePath}
+	return c
 }
 
-
-func (ch *ConsentHelper) Init(userCredentials utils.UserCredentials) error{
+func (ch *consentHelper) Init(userCredentials utils.UserCredentials) error{
 	chain, err := utils.GetChain(userCredentials, ch.StatStorePath, ch.ChainID)
 	if err != nil {
 		return err
@@ -48,29 +41,39 @@ func (ch *ConsentHelper) Init(userCredentials utils.UserCredentials) error{
 	return nil
 }
 
-func (ch *Consent) Print() string {
-	consentStr := fmt.Sprintf("ConsentID:%s ConsumerID:%s OwnerID:%s Datatype:%s Dataaccess:%s Dt_begin:%s Dt_end:%s", ch.ConsentID, ch.ConsumerID, ch.OwnerID, ch.DataType, ch.DataAccess, ch.Dt_begin, ch.Dt_end)
-	return consentStr
+type ConsentHelper interface {
+	Init(utils.UserCredentials) error
+	GetVersion(chainCodeID string) (string, error)
+	GetConsent(chainCodeID, appID, consentID string) (Consent, error)
+	GetConsents(chainCodeID, appID string) ([]Consent, error)
+	GetOwnerConsents(chainCodeID, appID, ownerID string) ([]Consent, error)
+	GetConsumerConsents(chainCodeID, appID, consumerID string) ([]Consent, error)
+	GetConsumerOwnerConsents(chainCodeID, appID, consumerID, ownerID string) ([]Consent, error)
+	CreateConsent(chainCodeID, appID, ownerID, consumerID, datatype, dataaccess, st_date, end_date string) (string, error)
+	DeleteConsents4Application(chainCodeID, appID string) (string, error)
+	DeleteConsent(chainCodeID, appID, consentID string) (string, error)
+	IsConsentExist(chainCodeID, appID, ownerID, consumerID, dataType, dataAccess string) (bool, error)
+	CreateConsentWithRegistration(chainCodeID, appID, ownerID, consumerID, datatype, dataaccess, st_date, end_date string) (string, error)
 }
 
 
-func (ch *ConsentHelper) GetVersion(chainCodeID string) (string, error) {
+func (ch *consentHelper) GetVersion(chainCodeID string) (string, error) {
 	log.Debug("GetVersion(chainCodeID:"+ chainCodeID+") : calling method -")
 	var args []string
 	args = append(args, "getversion")
 	return utils.Query(ch.ChainID, chainCodeID, args, ch.Chain)
 }
 
-func (ch *ConsentHelper) GetConsent(chainCodeID, appID, consentID string) (Consent, error) {
+func (ch *consentHelper) GetConsent(chainCodeID, appID, consentID string) (Consent, error) {
 	var args []string
 	args = append(args, "getconsent")
 	args = append(args, appID)
 	args = append(args, consentID)
 	strResp, err := utils.Query(ch.ChainID, chainCodeID, args, ch.Chain)
-	return extractConsent(consentID, strResp, err)
+	return extractConsent(strResp, err)
 }
 
-func (ch *ConsentHelper) GetConsents(chainCodeID, appID string) ([]Consent, error) {
+func (ch *consentHelper) GetConsents(chainCodeID, appID string) ([]Consent, error) {
 	var args []string
 	args = append(args, "getconsents")
 	args = append(args, appID)
@@ -78,7 +81,7 @@ func (ch *ConsentHelper) GetConsents(chainCodeID, appID string) ([]Consent, erro
 	return extractConsents(strResp, err)
 }
 
-func (ch *ConsentHelper) GetOwnerConsents(chainCodeID, appID, ownerID string) ([]Consent, error) {
+func (ch *consentHelper) GetOwnerConsents(chainCodeID, appID, ownerID string) ([]Consent, error) {
 	var args []string
 	args = append(args, "getownerconsents")
 	args = append(args, appID)
@@ -87,7 +90,7 @@ func (ch *ConsentHelper) GetOwnerConsents(chainCodeID, appID, ownerID string) ([
 	return extractConsents(strResp, err)
 }
 
-func (ch *ConsentHelper) GetConsumerConsents(chainCodeID, appID, consumerID string) ([]Consent, error) {
+func (ch *consentHelper) GetConsumerConsents(chainCodeID, appID, consumerID string) ([]Consent, error) {
 	var args []string
 	args = append(args, "getconsumerconsents")
 	args = append(args, appID)
@@ -96,17 +99,17 @@ func (ch *ConsentHelper) GetConsumerConsents(chainCodeID, appID, consumerID stri
 	return extractConsents(strResp, err)
 }
 
-func (ch *ConsentHelper) GetConsumerOwnerConsents(chainCodeID, appID, consumerID, ownerID string) ([]Consent, error) {
+func (ch *consentHelper) GetConsumerOwnerConsents(chainCodeID, appID, consumerID, ownerID string) ([]Consent, error) {
 	var args []string
 	args = append(args, "getconsumerownerconsents")
 	args = append(args, appID)
-	args = append(args, ownerID)
 	args = append(args, consumerID)
+	args = append(args, ownerID)
 	strResp, err := utils.Query(ch.ChainID, chainCodeID, args, ch.Chain)
 	return extractConsents(strResp, err)
 }
 
-func (ch *ConsentHelper) CreateConsent(chainCodeID, appID, ownerID, consumerID, datatype, dataaccess, st_date, end_date string) (string, error) {
+func (ch *consentHelper) CreateConsent(chainCodeID, appID, ownerID, consumerID, datatype, dataaccess, st_date, end_date string) (string, error) {
 	var args []string
 	args = append(args, "postconsent")
 	args = append(args, appID)
@@ -120,23 +123,24 @@ func (ch *ConsentHelper) CreateConsent(chainCodeID, appID, ownerID, consumerID, 
 	return txID, err
 }
 
-func (ch *ConsentHelper) DeleteConsents4Application(chainCodeID, appID string) (string, error) {
+func (ch *consentHelper) DeleteConsents4Application(chainCodeID, appID string) (string, error) {
 	var args []string
-	args = append(args, "resetconsents")
+	args = append(args, "deleteconsents")
 	args = append(args, appID)
 	txID, err := utils.CreateTransaction(ch.ChainID, chainCodeID, args, ch.Chain)
 	return txID, err
 }
 
-func (ch *ConsentHelper) RemoveConsent(chainCodeID, appID, consentID string) (string, error) {
+func (ch *consentHelper) DeleteConsent(chainCodeID, appID, consentID string) (string, error) {
 	var args []string
-	args = append(args, "removeconsent")
+	args = append(args, "deleteconsent")
 	args = append(args, appID)
 	args = append(args, consentID)
-	return utils.CreateTransaction(ch.ChainID, chainCodeID, args, ch.Chain)
+	txID, err := utils.CreateTransaction(ch.ChainID, chainCodeID, args, ch.Chain)
+	return txID, err
 }
 
-func (ch *ConsentHelper) IsConsentExist(chainCodeID, appID, ownerID, consumerID, dataType, dataAccess string) (bool, error) {
+func (ch *consentHelper) IsConsentExist(chainCodeID, appID, ownerID, consumerID, dataType, dataAccess string) (bool, error) {
 	var args []string
 	args = append(args, "isconsent")
 	args = append(args, appID)
@@ -148,7 +152,7 @@ func (ch *ConsentHelper) IsConsentExist(chainCodeID, appID, ownerID, consumerID,
 	return extractIsConsent(strResp, err)
 }
 
-func (ch *ConsentHelper) CreateConsentWithRegistration(chainCodeID, appID, ownerID, consumerID, datatype, dataaccess, st_date, end_date string) (string, error) {
+func (ch *consentHelper) CreateConsentWithRegistration(chainCodeID, appID, ownerID, consumerID, datatype, dataaccess, st_date, end_date string) (string, error) {
 	var args []string
 	args = append(args, "postconsent")
 	args = append(args, appID)
@@ -176,7 +180,7 @@ func extractConsents(stringresp string, err error) ([]Consent, error) {
 	return consents, err
 }
 
-func extractConsent(consentID, stringresp string, err error) (Consent, error) {
+func extractConsent(stringresp string, err error) (Consent, error) {
 	var consent Consent
 	if err != nil {
 		return consent, err

@@ -3,7 +3,7 @@ package helpers
 import (
 	"testing"
 	"time"
-	"strings"
+	//"strings"
 	sdkConfig "github.com/hyperledger/fabric-sdk-go/config"
 	"github.com/golang/protobuf/proto"
 	cb "github.com/hyperledger/fabric/protos/common"
@@ -34,7 +34,7 @@ func TestGetOrderer(t *testing.T) {
 		t.Log("orderer: url=", orderer.GetURL(), "\n")
 	}
 }
-
+/*
 func TestMSPManager(t *testing.T) {
 	mspmanager := netHelper.Chain.GetMSPManager()
 	mspManagers, _ := mspmanager.GetMSPs()
@@ -70,7 +70,7 @@ func TestClient(t *testing.T) {
 	t.Log("user name: ", user.GetName())
 	t.Log("user enrollment cert: ", string(user.GetEnrollmentCertificate()))
 	t.Log("user roles: ",  strings.Join(user.GetRoles()," "))
-}
+}*/
 
 func TestQueryInfos(t *testing.T) {
 	t.Log("TestQueryInfos ")

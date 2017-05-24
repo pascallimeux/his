@@ -76,8 +76,7 @@ link:  https://github.com/go-swagger/go-swagger/tree/master/fixtures/goparsing/p
 
 Installation:
     go get -u github.com/go-swagger/go-swagger/cmd/swagger
-    cd ../cmg/swagger
-    go install swagger.go
+    cd $GOPATH/src/github.com/go-swagger/go-swagger/cmd/swagger && go install swagger.go
     go get github.com/go-openapi/runtime
     go get github.com/tylerb/graceful
     go get github.com/jessevdk/go-flags
@@ -90,7 +89,7 @@ Add annotation in API
 Generate swagger.yml and swagger.json
     in ../github.com/pascallimeux/his
     swagger init spec \
-      --title "H.I.S application" \
+      --title "his" \
       --description "Hyperledger Interface Server" \
       --version 1.0.0 \
       --scheme http
@@ -103,7 +102,8 @@ update golang libs
 
 Generate server and test it
     swagger generate server -f ./swagger.json
-    cd ./cmd/his-server && go run main.go
+    swagger serve --port=3000 --host=192.168.0.103 swagger.json --base-path=/swagger
+    to test http://192.168.0.103:3000/swagger
 
 Remove swagger
     cd his

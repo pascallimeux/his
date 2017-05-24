@@ -30,10 +30,9 @@ const(
 
 var netHelper  NetworkHelper
 var consHelper ocms.ConsentHelper
-var userHelper UserHelper
+var userhelper UserHelper
 var configuration settings.Settings
 var statStorePath string
-
 
 func setup() {
 
@@ -47,7 +46,7 @@ func setup() {
 	adminCredentials := utils.UserCredentials {UserName:configuration.Adminusername, Password:configuration.AdminPwd}
 
 	// Init network helper
-	netHelper = NetworkHelper{Repo: configuration.Repo, StatStorePath: configuration.StatstorePath, ChainID: configuration.ChainID}
+	netHelper = NewNetworkHelper(configuration.Repo, configuration.StatstorePath, configuration.ChainID)
 	err = netHelper.StartNetwork(adminCredentials, configuration.ProviderName, configuration.NetworkConfigfile, configuration.ChannelConfigFile)
 	if err != nil {
 		log.Fatal(err)
@@ -62,13 +61,11 @@ func setup() {
 	}
 
 	// Init user helper
-	userHelper = UserHelper{
-		StatStorePath: configuration.StatstorePath,
-	}
-	userHelper.Init(adminCredentials)
+	userhelper = NewUserHelper(configuration.StatstorePath)
+	userhelper.Init(adminCredentials)
 
 	// Init consent helper
-	consHelper = ocms.ConsentHelper{ChainID:configuration.ChainID, StatStorePath:configuration.StatstorePath}
+	consHelper = ocms.NewConsentHelper(configuration.ChainID, configuration.StatstorePath)
 	err = consHelper.Init(adminCredentials)
 	if err != nil {
 		log.Fatal(err.Error())

@@ -72,9 +72,7 @@ func SendError(w http.ResponseWriter, err error, code int) {
 	w.Write(errorResponse)
 }
 
-// A GenericError is the default error message that is generated.
-// For certain status codes there are more appropriate error structures.
-//
+// Genric error for API
 // swagger:response genericError
 type GenericError struct {
 	// in: path

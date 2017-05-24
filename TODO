@@ -15,6 +15,9 @@ X faire un makefile cf celui du sdk, (depends, tests unitaires, integration, doc
 X mettre les APIs en https
 
 
+- verifier l'utilité des tests et corriger
+- net README.md, makefile et la racine
+
 - analyser block et transaction
 - verifier les objets (string) renvoyés par les api de type query
 - ajouter un swagger
@@ -46,36 +49,3 @@ faire les slides:
 - resoudre le problème des log dans un chaincode
 - les api query qui ne fonctionnent pas
 - A quoi serts le provider name ?
-
-----------------------------------------------------------------------------------------
-go get -u github.com/go-swagger/go-swagger/cmd/swagger
-cd ../cmg/swagger
-go install swagger.go
-
-go get github.com/go-openapi/runtime
-go get github.com/tylerb/graceful
-go get github.com/jessevdk/go-flags
-go get golang.org/x/net/context
-
-
-cd his
-swagger generate spec -o ./swagger.json
-
-swagger validate https://raw.githubusercontent.com/swagger-api/swagger-spec/master/examples/v2.0/json/petstore-expanded.json
-swagger generate server [-f ./swagger.json] -A [application-name [--principal [principal-name]]
-swagger generate client [-f ./swagger.json] -A [application-name [--principal [principal-name]]
-
-swagger generate server -A AuthSample -P models.Principal -f ./swagger.yml
-
-
-swagger init spec \
-  --title "H.I.S application" \
-  --description "Hyperledger Interface Server" \
-  --version 1.0.0 \
-  --scheme http \
-  --consumes /his/v0/dashboard/+json \
-  --produces /his/v0/dashboard/+json
-
-swagger validate ./swagger.yml
-
-swagger generate server -A TodoList -f ./swagger.yml

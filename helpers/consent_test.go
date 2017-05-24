@@ -67,7 +67,7 @@ func TestRemoveAConsent(t *testing.T) {
 		t.Error("CreateConsent return error: ", err)
 	}
 	time.Sleep(TransactionTimeout)
-	_, err = consHelper.RemoveConsent(configuration.ChainCodeID, APPID3, consentID)
+	_, err = consHelper.DeleteConsent(configuration.ChainCodeID, APPID3, consentID)
 	if err != nil {
 		t.Error("RemoveConsent return error: ", err)
 	}

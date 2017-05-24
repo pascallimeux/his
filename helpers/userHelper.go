@@ -11,7 +11,7 @@ import (
 	"github.com/pascallimeux/his/modules/utils"
 )
 
-type UserHelper struct {
+type userHelper struct {
 	StatStorePath   string
 	AdmClient       fabricClient.Client
 	AdmUser		fabricClient.User
@@ -26,7 +26,22 @@ type UserRegistrer struct {
 	Affiliation      string	`json:"affiliation"`
 }
 
-func (uh *UserHelper) Init (userCredentials utils.UserCredentials) error{
+func NewUserHelper(statStorePath string) UserHelper {
+	u := &userHelper{StatStorePath: statStorePath}
+	return u
+}
+
+type UserHelper interface {
+	Init(utils.UserCredentials) error
+	RegisterUser(registerUser UserRegistrer) (string, error)
+	EnrollUser(userCredentials utils.UserCredentials) error
+	ReenrollUser(userCredentials utils.UserCredentials) error
+	RevokeUser(userCredentials utils.UserCredentials)error
+	GetUser(userCredentials utils.UserCredentials) (fabricClient.User, error)
+}
+
+
+func (uh *userHelper) Init (userCredentials utils.UserCredentials) error{
 	client, err := utils.GetClient(userCredentials, uh.StatStorePath)
 	if err != nil {
 		return err
@@ -46,7 +61,7 @@ func (uh *UserHelper) Init (userCredentials utils.UserCredentials) error{
 	return nil
 }
 
-func (uh *UserHelper) RegisterUser(registerUser UserRegistrer) (string, error) {
+func (uh *userHelper) RegisterUser(registerUser UserRegistrer) (string, error) {
 	log.Debug("RegisterUser(name:"+ registerUser.Name+" Type:" + registerUser.Type +" Affiliation:"+ registerUser.Affiliation+") : calling method -")
 	registerRequest := fabricCAClient.RegistrationRequest{Name: registerUser.Name, Type: registerUser.Type, Affiliation: registerUser.Affiliation}
 	enrolmentSecret, err := uh.CaClient.Register(uh.AdmUser, &registerRequest)
@@ -57,7 +72,7 @@ func (uh *UserHelper) RegisterUser(registerUser UserRegistrer) (string, error) {
 }
 
 
-func (uh *UserHelper) EnrollUser(userCredentials utils.UserCredentials) error{
+func (uh *userHelper) EnrollUser(userCredentials utils.UserCredentials) error{
 	log.Debug("EnrollUser(userName:"+ userCredentials.UserName+") : calling method -")
 	key, cert, err := uh.CaClient.Enroll(userCredentials.UserName, userCredentials.Password)
 	if err != nil {
@@ -74,7 +89,7 @@ func (uh *UserHelper) EnrollUser(userCredentials utils.UserCredentials) error{
 	return nil
 }
 
-func (uh *UserHelper) ReenrollUser(userCredentials utils.UserCredentials) error{
+func (uh *userHelper) ReenrollUser(userCredentials utils.UserCredentials) error{
 	log.Debug("ReenrollUser(userName:"+ userCredentials.UserName+") : calling method -")
 	enrolleduser := fabricClient.NewUser(userCredentials.UserName)
 	//enrolleduser.SetEnrollmentCertificate(ecert)
@@ -94,7 +109,7 @@ func (uh *UserHelper) ReenrollUser(userCredentials utils.UserCredentials) error{
 	return nil
 }
 
-func (uh *UserHelper) RevokeUser(userCredentials utils.UserCredentials)error{
+func (uh *userHelper) RevokeUser(userCredentials utils.UserCredentials)error{
 	log.Debug("RevokeUser(userName:"+ userCredentials.UserName+") : calling method -")
 	revokeRequest := fabricCAClient.RevocationRequest{Name: userCredentials.UserName}
 	err := uh.CaClient.Revoke(uh.AdmUser, &revokeRequest)
@@ -104,7 +119,7 @@ func (uh *UserHelper) RevokeUser(userCredentials utils.UserCredentials)error{
 	return nil
 }
 
-func (uh *UserHelper) GetUser(userCredentials utils.UserCredentials) (fabricClient.User, error) {
+func (uh *userHelper) GetUser(userCredentials utils.UserCredentials) (fabricClient.User, error) {
 	log.Debug("GetUser(username:"+ userCredentials.UserName+") : calling method -")
 	user, err := uh.AdmClient.LoadUserFromStateStore(userCredentials.UserName)
 	if err != nil {

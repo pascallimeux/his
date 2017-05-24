@@ -21,7 +21,7 @@ const(
 	ADMINNAME          = "admin"
 	ADMINPWD           = "admpw"
 	APPID              = "apptest"
-	TransactionTimeout = time.Millisecond * 1500
+	TransactionTimeout = time.Millisecond * 2500
 )
 
 func TestMain(m *testing.M) {
@@ -38,11 +38,7 @@ func setup() {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	networkHelper := helpers.NetworkHelper{
-		Repo:                   configuration.Repo,
-		StatStorePath:          configuration.StatstorePath,
-		ChainID:         	configuration.ChainID}
+	networkHelper := helpers.NewNetworkHelper(configuration.Repo, configuration.StatstorePath, configuration.ChainID)
 
 	adminCredentials := utils.UserCredentials {
 		UserName:configuration.Adminusername,
