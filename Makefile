@@ -1,3 +1,7 @@
+.DEFAULT_GOAL := build
+
+include Makefile.variables
+
 #
 # Copyright OrangeLabs Inc. All Rights Reserved.
 #
@@ -28,18 +32,6 @@
 # integration-test: runs all the integration tests
 # clean: stops docker conatainers used for integration testing
 #
-
-IPPEER0      := 192.168.0.105
-PORTPEER0    := 7051
-PORTEVT0     := 7053
-IPPEER1      := 192.168.0.105
-PORTPEER1    := 7056
-PORTEVT1     := 7058
-IPORDERER0   := 192.168.0.105
-PORTORDERER0 := 7050
-IPCA0        := 192.168.0.105
-PORTCA0      := 7054
-
 
 .PHONY: help
 help:
@@ -97,7 +89,7 @@ clean-hp:
 	echo "Clean Hyperledger test environment."
 	sh ./scripts/cleanHP.sh
 
-image-build:
+image:
 	echo "Build HIS docker image."
 	cp ./fixtures/config/config.yaml ./fixtures/config/config_prod.yaml
 	sudo sed -i "s/IPPEER0/$(IPPEER0)/g"  ./fixtures/config/config_prod.yaml
@@ -147,14 +139,15 @@ swagger-init:
       --scheme http
 	swagger generate spec -o ./swagger.json -i ./swagger.yml
 	go get -u -f ./...
-	swagger generate server -f ./swagger.json
+	swagger generate server -f ./swagger.json -A his
 
 swagger-build:
 	swagger generate spec -o ./swagger.json -i ./swagger.yml
-	swagger generate server -f ./swagger.json
+	swagger generate server -f ./swagger.json -A his
 
 swagger-clean:
 	rm swagger.json && sudo rm -R cmd && sudo rm -R restapi
 
 swagger-start:
-	swagger serve --port=3000 --host=127.0.0.1 swagger.json --base-path=/swagger-ui
+	#swagger serve --port=3000 --host=127.0.0.1 swagger.json --base-path=/swagger-ui
+	go run ./cmd/his-server/main.go --host=192.168.20.77 --port=3000

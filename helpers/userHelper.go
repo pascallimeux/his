@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 	"github.com/pascallimeux/his/modules/utils"
+	"net/http"
 )
 
 type userHelper struct {
@@ -19,6 +20,12 @@ type userHelper struct {
 	Initialized	bool
 }
 
+
+func GetUserHelper(statStorePath string, admCred utils.UserCredentials, authent  bool, r *http.Request) (UserHelper, error){
+	userHelper := NewUserHelper(statStorePath)
+	err := utils.InitHelper(r, userHelper, admCred  ,authent)
+	return userHelper, err
+}
 
 type UserRegistrer struct {
 	Name 		 string	`json:"name"`

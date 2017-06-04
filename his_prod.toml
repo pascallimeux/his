@@ -26,6 +26,6 @@ networkConfigFile = "/var/his/fixtures/config/config_prod.yaml"
 channelConfigFile = "/var/his/fixtures/channel/testchannel.tx"
 
 [admin]
-authMode          = "false"
+authMode          = false
 adminUsername     = "admin"
 adminPwd          = "adminpw"

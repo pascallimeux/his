@@ -11,6 +11,7 @@ import(
 	"strconv"
 	"github.com/pascallimeux/his/modules/utils"
 	"github.com/op/go-logging"
+	"net/http"
 )
 
 var log = logging.MustGetLogger("his.helpers")
@@ -34,6 +35,13 @@ type ChainCode struct {
 func NewNetworkHelper(repo, statStorePath, chainID string) NetworkHelper {
 	n := &networkHelper{Repo: repo, StatStorePath: statStorePath, ChainID: chainID}
 	return n
+}
+
+
+func GetNetworkHelper(repo, statStorePath, chainID string, admCred utils.UserCredentials, authent  bool, r *http.Request) (NetworkHelper, error){
+	netHelper := NewNetworkHelper(repo, statStorePath, chainID)
+	err := utils.InitHelper(r, netHelper, admCred  ,authent)
+	return netHelper, err
 }
 
 type NetworkHelper interface {

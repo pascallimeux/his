@@ -1,9 +1,9 @@
 client:
  peers:
   #peer0:
-  - host: "192.168.0.105"
+  - host: "192.168.0.104"
     port: 7051
-    eventHost: "192.168.0.105"
+    eventHost: "192.168.0.104"
     eventPort: 7053
     primary: true
     tls:
@@ -12,9 +12,9 @@ client:
       serverHostOverride: "peer0"
 
   # peer1:
-  - host: "192.168.0.105"
+  - host: "192.168.0.104"
     port: 7056
-    eventHost: "192.168.0.105"
+    eventHost: "192.168.0.104"
     eventPort: 7058
     primary: false
     tls:
@@ -35,7 +35,7 @@ client:
     size: 200
 
  orderer:
-  host: "192.168.0.105"
+  host: "192.168.0.104"
   port: 7050
   tls:
     # Certificate location absolute path
@@ -48,7 +48,7 @@ client:
  fabricCA:
   tlsEnabled: true
   id: "Org1MSP"
-  serverURL: "http://192.168.0.105:7054"
+  serverURL: "http://192.168.0.104:7054"
   certfiles :
     - "/var/his/fixtures/root.pem"
   client:

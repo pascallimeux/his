@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"encoding/json"
+	"net/http"
 )
 
 type consentHelper struct {
@@ -18,10 +19,18 @@ type consentHelper struct {
 }
 
 
+func GetConsentHelper(statStorePath, chainID string, admCred utils.UserCredentials, authent  bool, r *http.Request) (ConsentHelper, error){
+	consentHelper := NewConsentHelper(chainID, statStorePath)
+	err := utils.InitHelper(r, consentHelper, admCred  ,authent)
+	return consentHelper, err
+}
+
+
 func NewConsentHelper(chainID, statStorePath string) ConsentHelper {
 	c := &consentHelper{ChainID: chainID, StatStorePath: statStorePath}
 	return c
 }
+
 
 func (ch *consentHelper) Init(userCredentials utils.UserCredentials) error{
 	chain, err := utils.GetChain(userCredentials, ch.StatStorePath, ch.ChainID)

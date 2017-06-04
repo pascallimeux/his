@@ -19,3 +19,4 @@ func InitHelper (r *http.Request, helper Helper, credentials UserCredentials, au
 	err = helper.Init(credentials)
 	return err
 }
+

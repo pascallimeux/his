@@ -14,7 +14,7 @@ import(
 
 var log = logging.MustGetLogger("his")
 
-//go:generate swagger generate spec
+//go:generate swagger generate spec -o ./swagger.json -i ./swagger.yml
 func main() {
 	// Init settings
 	configuration, err := settings.GetSettings(".", "his")
