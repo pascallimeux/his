@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 . ./scripts/config.sh
 echo "> Save HIS docker image ($PROJECTPATH/build/image/his.tar)"
+if [ ! -d $PROJECTPATH/build/image ]; then
+    mkdir $PROJECTPATH/build/image
+fi
 docker save his -o $PROJECTPATH/build/image/his.tar > /dev/null
 if [ -f $PROJECTPATH/build/image/his.tar ]; then
     echo "file created!"
