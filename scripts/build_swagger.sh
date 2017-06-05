@@ -8,8 +8,8 @@ swagger init spec \
     --version 1.0.0 \
     --scheme http  > /dev/null 2>&1 
 swagger generate spec -o ./swagger.json -i ./swagger.yml  > /dev/null  2>&1
-go get -u -f ./...
-swagger generate server -f ./swagger.json -A his > /dev/null 
+go get -u -f ./... > /dev/null  2>&1
+swagger generate server -f ./swagger.json -A his > /dev/null 2>&1
 if ls $PROJECTPATH/swagger.* 1> /dev/null 2>&1; then
     echo "swagger files created (swagger.yml swagger.json)"
 else

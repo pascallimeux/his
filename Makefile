@@ -91,7 +91,7 @@ stop-hp:
 clean-hp: stop-his stop-hp
 	@sh ./scripts/clean_hp.sh
 
-start-his: start-hp
+start-his: stop-his start-hp
 	@sh ./scripts/start_his.sh
 
 stop-his:
@@ -103,6 +103,7 @@ clean-his:
 build-image: build-his
 	@sh ./scripts/generate_keys.sh
 	@sh ./scripts/update_config.sh
+	@sh ./scripts/build_swagger.sh
 	@sh ./scripts/build_image.sh
 	@sh ./scripts/save_image.sh
 
