@@ -78,7 +78,7 @@ func main() {
 	}
 	if configuration.Tls {
 		log.Debug("Start https Server")
-		log.Fatal(s.ListenAndServeTLS("server.crt", "server.key"))
+		log.Fatal(s.ListenAndServeTLS("./keys/server.crt", "./keys/server.key"))
 	}else{
 		log.Debug("Start http Server")
 		log.Fatal(s.ListenAndServe().Error())

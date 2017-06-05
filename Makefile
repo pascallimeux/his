@@ -1,7 +1,3 @@
-.DEFAULT_GOAL := build
-
-include Makefile.variables
-
 #
 # Copyright OrangeLabs Inc. All Rights Reserved.
 #
@@ -33,121 +29,100 @@ include Makefile.variables
 # clean: stops docker conatainers used for integration testing
 #
 
+.DEFAULT_GOAL := bin
 .PHONY: help
 help:
-	@echo 'Management commands for cicdtest:'
+	@echo
+	@echo
+	@echo ' --------------------------------------------------------'
+	@echo '  Management commands for Hyperledeger Interface Service  '
+	@echo ' --------------------------------------------------------'
 	@echo
 	@echo 'Usage:'
 	@echo ' ## Build Commands'
-	@echo ' make tag-build Add git tag for latest build.'
+	@echo ' make init          Get from github and gerrit fabric-sdk-go and Go mandatories libs.'
+	@echo ' make build-his     Generate HIS binary (./build/bin/his).'
+	@echo ' make build-swagger Generate swagger code.'
+	@echo ' make build-image   Generate docker image for His and save it (./build/image/his.tar).'
+	@echo ' make clean         Remove all generated code.'
+	@echo ' make update-vendor Update vendor libs.'
+	@echo ' make update-sdk    Update fabric-sdk-go.'
 	@echo
-	@echo ' ## Generator Commands'
-	@echo ' make generate Run code generator for project.'
+	@echo ' ## Run Commands'
+	@echo ' make start-hp  Start docker hyperledger test environment.'
+	@echo ' make stop-hp   Stop  docker hyperledger test environment.'
+	@echo ' make clean-hp  Clean docker hyperledger test environment.'
+	@echo ' make start-his Start docker HIS container.'
+	@echo ' make stop-his  Stop  docker HIS container.'
+	@echo ' make clean-his Clean docker HIS image, container and server keys.'
 	@echo
-	@echo ' ## Develop / Test Commands'
-	@echo ' make vendor Install dependencies.'
-	@echo ' make format Run code formatter.'
-	@echo ' make check Run static code analysis (lint).'
-	@echo ' make test Run tests on project.'
-	@echo ' make cover Run tests and capture code coverage metrics on project.'
-	@echo ' make clean Clean the directory tree of produced artifacts.'
+	@echo ' ## Test Commands'
+	@echo ' make integration-test Run integration tests.'
+	@echo ' make test             Run unit tests.'
 	@echo
-	@echo ' ## Utility Commands'
-	@echo ' make setup Configures Minishfit/Docker directory mounts.'
+	@echo ' ## Swagger Commands'
+	@echo ' make start-swagger Start  Rest server for swagger.'
+	@echo ' make stop-swagger  Stop   Rest server for swagger.'
+	@echo ' make clean-swagger Remove Swagger code.'
 	@echo
+	@echo
+
+build-his:
+	@sh ./scripts/build_his.sh
 
 all: integration-test
 
-.PHONY: depend
-depend:
-	go get -u github.com/kardianos/govendor && go get github.com/gorilla/mux && go get github.com/op/go-logging
-	cd $GOPATH/src/github.com/hyperledger/ && git clone https://gerrit.hyperledger.org/r/fabric-sdk-go
+init:
+	@sh ./scripts/dependencies.sh
+	@sh ./scripts/get_fabric_sdk.sh
 
-.PHONY: vendor
-vendor:
-	echo "Make vendor Install dependencies."
-	cd $(GOPATH)/src/github.com/hyperledger/fabric-sdk-go && git pull
-	cd $(GOPATH)/src/github.com/pascallimeux/his
-	sudo rm -R vendor
-	govendor init
-	govendor add +external
+update-vendor:
+	@sh ./scripts/update_vendor.sh
 
-.PHONY: start-hp
+update-sdk:
+	@sh ./scripts/update_sdk.sh
+
 start-hp:
-	echo "Start Hyperledger test environment."
-	cd $(GOPATH)/src/github.com/hyperledger/fabric-sdk-go/test/fixtures && docker-compose -f docker-compose.yaml up --force-recreate -d
-	docker ps
+	@sh ./scripts/start_hp.sh
 
-.PHONY: stop-hp
 stop-hp:
-	echo "Stop Hyperledger test environment."
-	cd $(GOPATH)/src/github.com/hyperledger/fabric-sdk-go/test/fixtures && docker-compose -f docker-compose.yaml stop
-	docker ps
+	@sh ./scripts/stop_hp.sh
 
-.PHONY: clean-hp
-clean-hp:
-	echo "Clean Hyperledger test environment."
-	sh ./scripts/cleanHP.sh
+clean-hp: stop-his stop-hp
+	@sh ./scripts/clean_hp.sh
 
-image:
-	echo "Build HIS docker image."
-	cp ./fixtures/config/config.yaml ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/IPPEER0/$(IPPEER0)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/PORTPEER0/$(PORTPEER0)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/PORTEVT0/$(PORTEVT0)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/IPPEER1/$(IPPEER1)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/PORTPEER1/$(PORTPEER1)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/PORTEVT1/$(PORTEVT1)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/IPORDERER0/$(IPORDERER0)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/PORTORDERER0/$(PORTORDERER0)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/IPCA0/$(IPCA0)/g"  ./fixtures/config/config_prod.yaml
-	sudo sed -i "s/PORTCA0/$(PORTCA0)/g"  ./fixtures/config/config_prod.yaml
-	cd $(GOPATH)/src/github.com/pascallimeux/his && go build his.go
-	openssl genrsa -out server.key 2048
-	openssl req -new -x509 -sha256 -key server.key -days 3650 -subj "/C=FR/ST=France/L=Grenoble/O=Orange/OU=OLS/CN=orange-labs.fr" -out server.crt
-	docker build -t his .
-	docker images
-
-
-.PHONY: start-his
 start-his: start-hp
-	echo "Start HIS docker container."
-	docker run -d -p 8000:8000 --name hisv1 his
+	@sh ./scripts/start_his.sh
 
-
-.PHONY: stop-his
 stop-his:
-	echo "Stop HIS docker container."
-	docker kill hisv1
+	@sh ./scripts/stop_his.sh
 
+clean-his:
+	@sh ./scripts/clean_his.sh
 
-.PHONY: integration-test
-integration-test: depend start-hp test stop-hp
+build-image: build-his
+	@sh ./scripts/generate_keys.sh
+	@sh ./scripts/update_config.sh
+	@sh ./scripts/build_image.sh
+	@sh ./scripts/save_image.sh
 
+clean: clean-hp clean-swagger clean-his
 
-.PHONY: test
+integration-test: start-hp test stop-hp
+
 test:
-	echo "Start HIS intregration tests."
-	cd $(GOPATH)/src/github.com/pascallimeux/his/api && go test -v
-	cd $(GOPATH)/src/github.com/pascallimeux/his/helpers && go test -v
+	@echo "> Start HIS intregration tests."
+	@cd $(GOPATH)/src/github.com/pascallimeux/his/api && go test -v
+	@cd $(GOPATH)/src/github.com/pascallimeux/his/helpers && go test -v
 
-swagger-init:
-	swagger init spec \
-      --title "his" \
-      --description "Hyperledger Interface Server" \
-      --version 1.0.0 \
-      --scheme http
-	swagger generate spec -o ./swagger.json -i ./swagger.yml
-	go get -u -f ./...
-	swagger generate server -f ./swagger.json -A his
+build-swagger:
+	@sh ./scripts/build_swagger.sh
 
-swagger-build:
-	swagger generate spec -o ./swagger.json -i ./swagger.yml
-	swagger generate server -f ./swagger.json -A his
+start-swagger:
+	@sh ./scripts/start_swagger.sh
 
-swagger-clean:
-	rm swagger.json && sudo rm -R cmd && sudo rm -R restapi
+stop-swagger:
+	@sh ./scripts/stop_swagger.sh
 
-swagger-start:
-	#swagger serve --port=3000 --host=127.0.0.1 swagger.json --base-path=/swagger-ui
-	go run ./cmd/his-server/main.go --host=192.168.20.77 --port=3000
+clean-swagger: stop-swagger
+	@sh ./scripts/clean_swagger.sh
