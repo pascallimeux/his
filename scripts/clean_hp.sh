@@ -19,20 +19,20 @@ if [ -f $GOPATH/src/github.com/hyperledger/fabric-sdk-go/test/fixtures/fabricca/
         echo "fabric-sdk DB removed!"
     fi
 fi
-if [ -f $PROJECTPATH/fixtures/enroll_user/*.pem ];then
-    sudo rm $PROJECTPATH/fixtures/enroll_user/*.pem > /dev/null
+if [ -f $PROJECTHISPATH/fixtures/enroll_user/*.pem ];then
+    sudo rm $PROJECTHISPATH/fixtures/enroll_user/*.pem > /dev/null
     if [ $? -eq 0 ];then
         echo "enroll pem files removed!"
     fi
 fi
-if [ -f $PROJECTPATH/fixtures/enroll_user/*.json ];then
-    sudo rm $PROJECTPATH/fixtures/enroll_user/*.json > /dev/null
+if [ -f $PROJECTHISPATH/fixtures/enroll_user/*.json ];then
+    sudo rm $PROJECTHISPATH/fixtures/enroll_user/*.json > /dev/null
     if [ $? -eq 0 ];then
         echo "enroll json files removed!"
     fi
 fi
-if [ -f $PROJECTPATH/fixtures/keystore/*_sk ];then
-    sudo rm $PROJECTPATH/fixtures/keystore/*_sk > /dev/null
+if [ -f $PROJECTHISPATH/fixtures/keystore/*_sk ];then
+    sudo rm $PROJECTHISPATH/fixtures/keystore/*_sk > /dev/null
     if [ $? -eq 0 ];then
     echo "stored keys removed!"
     fi

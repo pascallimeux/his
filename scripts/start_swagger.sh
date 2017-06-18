@@ -3,7 +3,7 @@
 #swagger serve --port=3000 --host=127.0.0.1 swagger.json --base-path=/swagger-ui
 #go run $PROJECTPATH/cmd/his-server/main.go --host=127.0.0.1 --port=3000 &
 echo "> Start swagger."
-CMD="$PROJECTPATH/cmd/his-server/swagger --host=127.0.0.1 --port=3000"
+CMD="$PROJECTHISPATH/cmd/his-server/swagger --host=127.0.0.1 --port=3000"
 eval "$CMD > /dev/null 2>&1 &"
 PID1=`pidof swagger`
 if [ -n "$PID1" ];then

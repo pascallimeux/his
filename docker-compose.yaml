@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  his:
+    image: ${HIS_IMAGE}:${HIS_TAG}
+    ports:
+      - "8000:8000"
+      - "3000:3000"
+    container_name: ${HIS_CONTAINER_NAME}
+
+  his-ui:
+    image: ${HIS_UI_IMAGE}:${HIS_UI_TAG}
+    ports:
+      - "8080:8080"
+    container_name: ${HIS_UI_CONTAINER_NAME}
+    depends_on:
+      - his
